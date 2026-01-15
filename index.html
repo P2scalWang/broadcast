@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Safety Crisis Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        :root {
+            --primary: #0f172a;
+            --accent: #2563eb;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --bg: #f8fafc;
+        }
+
+        body {
+            font-family: 'Sarabun', sans-serif;
+            background: var(--bg);
+            margin: 0;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        #login-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--primary);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .login-card {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            width: 350px;
+            text-align: center;
+        }
+
+        .login-card input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            box-sizing: border-box;
+        }
+
+        .login-card button {
+            width: 100%;
+            padding: 12px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .sidebar {
+            width: 260px;
+            background: var(--primary);
+            color: white;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-header {
+            padding: 30px 20px;
+            text-align: center;
+            border-bottom: 1px solid #1e293b;
+        }
+
+        .nav-item {
+            padding: 18px 25px;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #94a3b8;
+        }
+
+        .nav-item:hover {
+            background: #1e293b;
+            color: white;
+        }
+
+        .nav-item.active {
+            background: var(--accent);
+            color: white;
+        }
+
+        .main-content {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 30px;
+        }
+
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .stat-card h3 {
+            margin: 0;
+            font-size: 0.9rem;
+            color: #64748b;
+        }
+
+        .stat-card .value {
+            font-size: 2.2rem;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .chart-grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 25px;
+        }
+
+        .chart-card {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+        }
+
+        .chart-wrapper {
+            height: 280px;
+        }
+
+        .table-container {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: #f1f5f9;
+            padding: 15px;
+            text-align: left;
+        }
+
+        td {
+            padding: 15px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .badge {
+            padding: 5px 12px;
+            border-radius: 30px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            color: white;
+        }
+
+        .bg-success {
+            background: var(--success);
+        }
+
+        .bg-danger {
+            background: var(--danger);
+        }
+
+        .bg-warning {
+            background: var(--warning);
+        }
+
+        .filter-bar {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            display: flex;
+            gap: 12px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+
+        .filter-bar select,
+        .filter-bar input {
+            padding: 10px 15px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .bc-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .bc-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+        }
+
+        .bc-card h4 {
+            margin: 0 0 15px 0;
+            color: #475569;
+        }
+
+        .bc-checkbox-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .bc-chip {
+            display: none;
+        }
+
+        .bc-chip+label {
+            padding: 10px 20px;
+            background: #f1f5f9;
+            border: 1px solid #e2e8f0;
+            border-radius: 25px;
+            cursor: pointer;
+        }
+
+        .bc-chip:checked+label {
+            background: var(--accent);
+            color: white;
+        }
+
+        .bc-chip.dept:checked+label {
+            background: var(--success);
+        }
+
+        .bc-message-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-top: 20px;
+        }
+
+        .bc-textarea {
+            width: 100%;
+            min-height: 150px;
+            padding: 15px;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            font-family: 'Sarabun';
+            resize: vertical;
+            box-sizing: border-box;
+        }
+
+        .bc-send-btn {
+            margin-top: 20px;
+            padding: 15px 30px;
+            background: var(--accent);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .bc-send-btn:disabled {
+            background: #cbd5e0;
+        }
+
+        .bc-add-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .bc-add-row input {
+            flex: 1;
+            padding: 10px 15px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+        }
+
+        .bc-add-row button {
+            padding: 10px 18px;
+            background: var(--success);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+        }
+
+        .realtime-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            background: #ecfdf5;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            color: var(--success);
+        }
+
+        .realtime-indicator .dot {
+            width: 8px;
+            height: 8px;
+            background: var(--success);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        .action-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 5px;
+        }
+
+        .btn-edit {
+            color: var(--accent);
+        }
+
+        .btn-delete {
+            color: var(--danger);
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+        }
+
+        .modal-card {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            width: 100%;
+            max-width: 450px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 25px;
+        }
+
+        .btn-modal {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="modalOverlay" class="modal-overlay">
+        <div class="modal-card">
+            <h2 id="modalTitle">จัดการข้อมูลพนักงาน</h2>
+            <input type="hidden" id="empKey">
+            <div style="margin-bottom:15px;"><label
+                    style="display:block;margin-bottom:5px;font-weight:bold;">เลขพนักงาน</label><input type="text"
+                    id="empId"
+                    style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;">
+            </div>
+            <div style="margin-bottom:15px;"><label
+                    style="display:block;margin-bottom:5px;font-weight:bold;">ชื่อ-นามสกุล</label><input type="text"
+                    id="empName"
+                    style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;">
+            </div>
+            <div style="margin-bottom:15px;"><label
+                    style="display:block;margin-bottom:5px;font-weight:bold;">สาขา</label><input type="text"
+                    id="empBranch"
+                    style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;">
+            </div>
+            <div style="margin-bottom:15px;"><label
+                    style="display:block;margin-bottom:5px;font-weight:bold;">แผนก</label><input type="text"
+                    id="empDept"
+                    style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;">
+            </div>
+            <div class="modal-buttons">
+                <button class="btn-modal" style="background:#e2e8f0;color:#475569;"
+                    onclick="closeModal()">ยกเลิก</button>
+                <button class="btn-modal" style="background:var(--accent);color:white;"
+                    onclick="handleSaveEmployee()">บันทึก</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="login-overlay">
+        <div class="login-card">
+            <i class="fas fa-user-shield fa-3x" style="color:var(--accent); margin-bottom:15px;"></i>
+            <h2>Safety Admin Login</h2>
+            <p style="color:#64748b; margin-bottom:20px;">🔥 Powered by Firebase</p>
+            <input type="text" id="username" placeholder="Username">
+            <input type="password" id="password" placeholder="Password">
+            <button onclick="handleLogin()">Login</button>
+        </div>
+    </div>
+
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h2><i class="fas fa-shield-alt"></i> SafetyApp</h2>
+        </div>
+        <div class="nav-item active" id="nav-dashboard" onclick="showPage('dashboard')"><i
+                class="fas fa-chart-line"></i> Dashboard</div>
+        <div class="nav-item" id="nav-activity" onclick="showPage('activity')"><i class="fas fa-history"></i>
+            รายการตอบกลับ</div>
+        <div class="nav-item" id="nav-employees" onclick="showPage('employees')"><i class="fas fa-users-cog"></i>
+            จัดการพนักงาน</div>
+        <div class="nav-item" id="nav-broadcast" onclick="showPage('broadcast')"><i class="fas fa-bullhorn"></i>
+            ส่งประกาศ</div>
+        <div class="nav-item" onclick="handleLogout()" style="margin-top:auto; color:var(--danger);"><i
+                class="fas fa-sign-out-alt"></i> ออกจากระบบ</div>
+    </div>
+
+    <div class="main-content">
+        <div id="dashboard" class="page active">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:25px;">
+                <h2>วิเคราะห์ข้อมูลความปลอดภัย</h2>
+                <span class="realtime-indicator"><span class="dot"></span> Realtime</span>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-card" style="border-top:5px solid var(--accent);">
+                    <h3>พนักงานในเหตุการณ์</h3>
+                    <div id="total-val" class="value">0</div>
+                </div>
+                <div class="stat-card" style="border-top:5px solid var(--success);">
+                    <h3>ปลอดภัย</h3>
+                    <div id="accept-val" class="value" style="color:var(--success)">0</div>
+                </div>
+                <div class="stat-card" style="border-top:5px solid var(--danger);">
+                    <h3>ขอความช่วยเหลือ</h3>
+                    <div id="help-val" class="value" style="color:var(--danger)">0</div>
+                </div>
+                <div class="stat-card" style="border-top:5px solid var(--warning);">
+                    <h3>รอการตอบกลับ</h3>
+                    <div id="wait-val" class="value" style="color:var(--warning)">0</div>
+                </div>
+            </div>
+            <div class="chart-grid">
+                <div class="chart-card">
+                    <h4>สัดส่วนความปลอดภัย</h4>
+                    <div class="chart-wrapper"><canvas id="pieChart"></canvas></div>
+                </div>
+                <div class="chart-card">
+                    <h4>สถิติเปรียบเทียบ</h4>
+                    <div class="chart-wrapper"><canvas id="barChart"></canvas></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="activity" class="page">
+            <h2 style="margin-bottom:20px;">รายการตอบกลับล่าสุด</h2>
+            <div class="filter-bar">
+                <select id="actStatusFilter" onchange="renderActivity()">
+                    <option value="all">ทุกสถานะ</option>
+                    <option value="Accept">ปลอดภัย</option>
+                    <option value="Help">ช่วยเหลือ</option>
+                    <option value="Wait">รอตอบกลับ</option>
+                </select>
+                <input type="text" id="searchAct" placeholder="ค้นหาชื่อ..." onkeyup="renderActivity()">
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ชื่อ / เหตุการณ์</th>
+                            <th>สาขา</th>
+                            <th>แผนก</th>
+                            <th>สถานะ</th>
+                            <th>เวลา</th>
+                        </tr>
+                    </thead>
+                    <tbody id="activityTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="employees" class="page">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:25px;">
+                <h2>จัดการพนักงาน</h2>
+                <button onclick="openModal('add')"
+                    style="background:var(--success);color:white;border:none;padding:10px 20px;border-radius:10px;cursor:pointer;"><i
+                        class="fas fa-user-plus"></i> เพิ่มพนักงาน</button>
+            </div>
+            <div class="filter-bar"><input type="text" id="searchEmp" placeholder="ค้นหาชื่อ..."
+                    onkeyup="renderEmployees()"></div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>เลขพนักงาน</th>
+                            <th>ชื่อ-นามสกุล</th>
+                            <th>สาขา</th>
+                            <th>แผนก</th>
+                            <th>จัดการ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="employeeTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="broadcast" class="page">
+            <h2 style="margin-bottom:25px;"><i class="fas fa-bullhorn"></i> ส่งประกาศแจ้งเตือน</h2>
+            <div class="bc-grid">
+                <div class="bc-card">
+                    <h4><i class="fas fa-building" style="color:var(--accent)"></i> เลือกสาขา</h4>
+                    <div class="bc-checkbox-grid" id="bcBranchGrid"></div>
+                    <div class="bc-add-row"><input type="text" id="bcNewBranch" placeholder="พิมพ์สาขาใหม่..."><button
+                            onclick="bcAddBranch()"><i class="fas fa-plus"></i></button></div>
+                </div>
+                <div class="bc-card">
+                    <h4><i class="fas fa-users" style="color:var(--success)"></i> เลือกแผนก</h4>
+                    <div class="bc-checkbox-grid" id="bcDeptGrid"></div>
+                    <div class="bc-add-row"><input type="text" id="bcNewDept" placeholder="พิมพ์แผนกใหม่..."><button
+                            onclick="bcAddDepartment()"><i class="fas fa-plus"></i></button></div>
+                </div>
+            </div>
+            <div class="bc-message-card">
+                <h4><i class="fas fa-comment-alt" style="color:var(--warning)"></i> ชื่อเหตุการณ์</h4>
+                <input type="text" id="bcEventName" placeholder="เช่น Fire Drill 2026"
+                    style="width:100%;padding:12px;border:1px solid #e2e8f0;border-radius:8px;margin-bottom:15px;box-sizing:border-box;">
+                <h4><i class="fas fa-envelope" style="color:var(--danger)"></i> ข้อความ</h4>
+                <textarea id="bcMessage" class="bc-textarea" placeholder="พิมพ์ข้อความประกาศ..."></textarea>
+                <button class="bc-send-btn" onclick="bcSendBroadcast()"><i class="fas fa-paper-plane"></i> ส่ง
+                    Broadcast</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+        import { getDatabase, ref, get, set, push, update, remove, onValue } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDYMkvTCHQ0oRuYANj1Axc_z6HrRkbxCnI",
+            authDomain: "p2sowen.firebaseapp.com",
+            databaseURL: "https://p2sowen-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "p2sowen",
+            storageBucket: "p2sowen.firebasestorage.app",
+            messagingSenderId: "432340752812",
+            appId: "1:432340752812:web:4cd4a2fc8182a111680209"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+
+        // ==================== LINE Webhook URL (Apps Script) ====================
+        const LINE_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbwT-lPZwB1sZvC-zxrHtQ6i2FZdbg8BcJIeXjhlL9eA6usfpfUvXWxSUAbMkOrAWgjUmw/exec';
+
+        let rawData = [];
+        let employeesData = [];
+        let pieChart, barChart;
+        let currentAction = 'add';
+
+        // ==================== Auth ====================
+        window.handleLogin = async function () {
+            const user = document.getElementById('username').value;
+            const pass = document.getElementById('password').value;
+            if (!user || !pass) return;
+            Swal.fire({ title: 'กำลังตรวจสอบ...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            try {
+                const snapshot = await get(ref(database, `users/${user}`));
+                if (snapshot.exists() && snapshot.val().password === pass) {
+                    Swal.fire({ icon: 'success', title: 'สำเร็จ', timer: 1500, showConfirmButton: false }).then(() => {
+                        localStorage.setItem('isLoggedIn', 'true');
+                        document.getElementById('login-overlay').style.display = 'none';
+                        initRealtimeListeners();
+                    });
+                } else {
+                    Swal.fire({ icon: 'error', title: 'รหัสไม่ถูกต้อง' });
+                }
+            } catch (e) {
+                Swal.fire({ icon: 'error', title: e.message });
+            }
+        };
+
+        window.handleLogout = function () { localStorage.removeItem('isLoggedIn'); location.reload(); };
+
+        // ==================== Realtime ====================
+        function initRealtimeListeners() {
+            onValue(ref(database, 'logEvents'), (snapshot) => {
+                const data = snapshot.val();
+                rawData = data ? Object.keys(data).map(key => ({
+                    _key: key,
+                    'รายชื่อพนักงาน': data[key].employeeName || data[key]['รายชื่อพนักงาน'],
+                    'สาขา': data[key].branch || data[key]['สาขา'],
+                    'แผนก': data[key].department || data[key]['แผนก'],
+                    Event: data[key].event || data[key].Event,
+                    Reply: data[key].reply || data[key].Reply || 'Wait',
+                    Message: data[key].message || '',
+                    Time: data[key].time || data[key].Time
+                })).sort((a, b) => new Date(b.Time) - new Date(a.Time)) : [];
+                updateDashboard();
+                renderActivity();
+            });
+
+            onValue(ref(database, 'employees'), (snapshot) => {
+                const data = snapshot.val();
+                employeesData = data ? Object.keys(data).map(key => ({ _key: key, ...data[key] })) : [];
+                renderEmployees();
+            });
+
+            onValue(ref(database, 'config'), (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    if (data.branches) bcRenderBranches(data.branches);
+                    if (data.departments) bcRenderDepartments(data.departments);
+                }
+            });
+        }
+
+        // ==================== Dashboard ====================
+        function updateDashboard() {
+            const a = rawData.filter(d => d.Reply === 'Accept').length;
+            const h = rawData.filter(d => d.Reply === 'Help').length;
+            const w = rawData.filter(d => d.Reply === 'Wait').length;
+            document.getElementById('total-val').innerText = rawData.length;
+            document.getElementById('accept-val').innerText = a;
+            document.getElementById('help-val').innerText = h;
+            document.getElementById('wait-val').innerText = w;
+
+            if (pieChart) pieChart.destroy();
+            pieChart = new Chart(document.getElementById('pieChart'), {
+                type: 'doughnut',
+                data: { labels: ['ปลอดภัย', 'ช่วยเหลือ', 'รอตอบกลับ'], datasets: [{ data: [a, h, w], backgroundColor: ['#10b981', '#ef4444', '#f59e0b'] }] },
+                options: { responsive: true, maintainAspectRatio: false, cutout: '70%' }
+            });
+
+            const events = [...new Set(rawData.map(d => d.Event))].filter(Boolean);
+            if (barChart) barChart.destroy();
+            barChart = new Chart(document.getElementById('barChart'), {
+                type: 'bar',
+                data: {
+                    labels: events,
+                    datasets: [
+                        { label: 'ปลอดภัย', data: events.map(e => rawData.filter(d => d.Event === e && d.Reply === 'Accept').length), backgroundColor: '#10b981' },
+                        { label: 'ช่วยเหลือ', data: events.map(e => rawData.filter(d => d.Event === e && d.Reply === 'Help').length), backgroundColor: '#ef4444' },
+                        { label: 'รอตอบกลับ', data: events.map(e => rawData.filter(d => d.Event === e && d.Reply === 'Wait').length), backgroundColor: '#f59e0b' }
+                    ]
+                },
+                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
+            });
+        }
+
+        // ==================== Activity ====================
+        window.renderActivity = function () {
+            const st = document.getElementById('actStatusFilter').value;
+            const s = document.getElementById('searchAct').value.toLowerCase();
+            const f = rawData.filter(d => (st === 'all' || d.Reply === st) && (d['รายชื่อพนักงาน'] || '').toLowerCase().includes(s));
+            document.getElementById('activityTableBody').innerHTML = f.map(i => `
+                <tr>
+                    <td><b>${i['รายชื่อพนักงาน'] || '-'}</b><br><small>${i.Event || '-'}</small></td>
+                    <td>${i['สาขา'] || '-'}</td>
+                    <td>${i['แผนก'] || '-'}</td>
+                    <td><span class="badge ${i.Reply === 'Accept' ? 'bg-success' : (i.Reply === 'Help' ? 'bg-danger' : 'bg-warning')}">${i.Reply}</span>${i.Reply === 'Help' && i.Message ? `<br><small style="color:var(--danger)">⚠️ ${i.Message}</small>` : ''}</td>
+                    <td>${i.Time ? new Date(i.Time).toLocaleString('th-TH') : '-'}</td>
+                </tr>
+            `).join('');
+        };
+
+        // ==================== Employees ====================
+        window.renderEmployees = function () {
+            const s = document.getElementById('searchEmp').value.toLowerCase();
+            const f = employeesData.filter(d => (d['รายชื่อพนักงาน'] || '').toLowerCase().includes(s));
+            document.getElementById('employeeTableBody').innerHTML = f.map(i => `
+                <tr>
+                    <td>${i['เลขพนักงาน'] || '-'}</td>
+                    <td><b>${i['รายชื่อพนักงาน'] || '-'}</b></td>
+                    <td>${i['สาขา'] || '-'}</td>
+                    <td>${i['แผนก'] || '-'}</td>
+                    <td>
+                        <button class="action-btn btn-edit" onclick="openModal('edit', '${i._key}', '${i['เลขพนักงาน']}', '${i['รายชื่อพนักงาน']}', '${i['สาขา']}', '${i['แผนก']}')"><i class="fas fa-edit"></i></button>
+                        <button class="action-btn btn-delete" onclick="handleDelete('${i._key}')"><i class="fas fa-trash"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+        };
+
+        window.openModal = function (action, key = '', empId = '', name = '', branch = '', dept = '') {
+            currentAction = action;
+            document.getElementById('modalTitle').innerText = action === 'add' ? 'เพิ่มพนักงานใหม่' : 'แก้ไขข้อมูล';
+            document.getElementById('empKey').value = key;
+            document.getElementById('empId').value = empId;
+            document.getElementById('empName').value = name;
+            document.getElementById('empBranch').value = branch;
+            document.getElementById('empDept').value = dept;
+            document.getElementById('modalOverlay').style.display = 'flex';
+        };
+
+        window.closeModal = function () { document.getElementById('modalOverlay').style.display = 'none'; };
+
+        window.handleSaveEmployee = async function () {
+            const key = document.getElementById('empKey').value;
+            const data = { 'เลขพนักงาน': document.getElementById('empId').value, 'รายชื่อพนักงาน': document.getElementById('empName').value, 'สาขา': document.getElementById('empBranch').value, 'แผนก': document.getElementById('empDept').value, Register: 'TRUE', Status: 'active' };
+            try {
+                if (currentAction === 'add') await push(ref(database, 'employees'), data);
+                else await update(ref(database, `employees/${key}`), data);
+                Swal.fire({ icon: 'success', title: 'บันทึกสำเร็จ', timer: 1500, showConfirmButton: false });
+                closeModal();
+            } catch (e) { Swal.fire({ icon: 'error', title: e.message }); }
+        };
+
+        window.handleDelete = async function (key) {
+            const result = await Swal.fire({ title: 'ยืนยันการลบ?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'ลบ' });
+            if (result.isConfirmed) { await remove(ref(database, `employees/${key}`)); Swal.fire({ icon: 'success', title: 'ลบแล้ว', timer: 1500, showConfirmButton: false }); }
+        };
+
+        // ==================== Broadcast ====================
+        function bcRenderBranches(branches) { document.getElementById('bcBranchGrid').innerHTML = branches.map((b, i) => `<input type="checkbox" class="bc-chip" id="bc-branch-${i}" value="${b}"><label for="bc-branch-${i}">${b}</label>`).join(''); }
+        function bcRenderDepartments(departments) { document.getElementById('bcDeptGrid').innerHTML = departments.map((d, i) => `<input type="checkbox" class="bc-chip dept" id="bc-dept-${i}" value="${d}"><label for="bc-dept-${i}">${d}</label>`).join(''); }
+
+        window.bcAddBranch = async function () {
+            const name = document.getElementById('bcNewBranch').value.trim();
+            if (!name) return;
+            const snapshot = await get(ref(database, 'config/branches'));
+            const branches = snapshot.val() || [];
+            if (!branches.includes(name)) { branches.push(name); await set(ref(database, 'config/branches'), branches); document.getElementById('bcNewBranch').value = ''; }
+        };
+
+        window.bcAddDepartment = async function () {
+            const name = document.getElementById('bcNewDept').value.trim();
+            if (!name) return;
+            const snapshot = await get(ref(database, 'config/departments'));
+            const departments = snapshot.val() || [];
+            if (!departments.includes(name)) { departments.push(name); await set(ref(database, 'config/departments'), departments); document.getElementById('bcNewDept').value = ''; }
+        };
+
+        window.bcSendBroadcast = async function () {
+            const message = document.getElementById('bcMessage').value.trim();
+            const eventName = document.getElementById('bcEventName').value.trim() || 'Alert';
+            const branches = Array.from(document.querySelectorAll('#bcBranchGrid input:checked')).map(cb => cb.value);
+            const departments = Array.from(document.querySelectorAll('#bcDeptGrid input:checked')).map(cb => cb.value);
+
+            if (!message) { Swal.fire({ icon: 'warning', title: 'กรุณาพิมพ์ข้อความ' }); return; }
+            if (branches.length === 0) { Swal.fire({ icon: 'warning', title: 'กรุณาเลือกสาขา' }); return; }
+            if (departments.length === 0) { Swal.fire({ icon: 'warning', title: 'กรุณาเลือกแผนก' }); return; }
+
+            Swal.fire({ title: 'กำลังส่ง Broadcast...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+            try {
+                // บันทึกลง Firebase
+                await push(ref(database, 'broadcasts'), { message, eventName, branches, departments, timestamp: new Date().toISOString(), status: 'sent' });
+
+                // ส่งไปยัง Apps Script เพื่อ Push LINE Message
+                const params = new URLSearchParams({
+                    action: 'broadcast',
+                    message: message,
+                    event: eventName,
+                    branches: branches.join(','),
+                    departments: departments.join(',')
+                });
+
+                // เรียก Apps Script webhook
+                await fetch(`${LINE_WEBHOOK_URL}?${params.toString()}`, { mode: 'no-cors' });
+
+                Swal.fire({ icon: 'success', title: 'ส่ง Broadcast สำเร็จ! 🎉', text: 'ข้อความถูกส่งไปยัง LINE แล้ว', timer: 2000, showConfirmButton: false });
+                document.getElementById('bcMessage').value = '';
+                document.getElementById('bcEventName').value = '';
+            } catch (e) {
+                Swal.fire({ icon: 'error', title: e.message });
+            }
+        };
+
+        // ==================== UI ====================
+        window.showPage = function (pId) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            document.getElementById(pId).classList.add('active');
+            document.getElementById('nav-' + pId).classList.add('active');
+        };
+
+        // ==================== Init ====================
+        window.addEventListener('load', () => {
+            if (localStorage.getItem('isLoggedIn') === 'true') {
+                document.getElementById('login-overlay').style.display = 'none';
+                initRealtimeListeners();
+            }
+            document.getElementById('password').addEventListener('keypress', e => { if (e.key === 'Enter') handleLogin(); });
+        });
+    </script>
+</body>
+
+</html>
