@@ -1,837 +1,1260 @@
 <!DOCTYPE html>
 <html lang="th">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Safety Crisis Dashboard</title>
-    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <style>
-        :root {
-            --primary: #0f172a;
-            --accent: #2563eb;
-            --success: #10b981;
-            --danger: #ef4444;
-            --warning: #f59e0b;
-            --bg: #f8fafc;
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <title>ร้านอมเรศ ท่าพระจันทร์ | ระบบจัดการใบสั่งจอง</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Prompt', 'sans-serif'] },
+          animation: { 'fade-in': 'fadeIn 0.3s ease-out', 'slide-up': 'slideUp 0.4s ease-out' },
+          keyframes: {
+            fadeIn: { '0%':{opacity:0}, '100%':{opacity:1} },
+            slideUp: { '0%':{opacity:0,transform:'translateY(12px)'}, '100%':{opacity:1,transform:'translateY(0)'} }
+          }
         }
-
-        body {
-            font-family: 'Sarabun', sans-serif;
-            background: var(--bg);
-            margin: 0;
-            display: flex;
-            height: 100vh;
-            overflow: hidden;
-        }
-
-        #login-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: var(--primary);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-        }
-
-        .login-card {
-            background: white;
-            padding: 40px;
-            border-radius: 20px;
-            width: 350px;
-            text-align: center;
-        }
-
-        .login-card input {
-            width: 100%;
-            padding: 12px;
-            margin-bottom: 15px;
-            border: 1px solid #ddd;
-            border-radius: 10px;
-            box-sizing: border-box;
-        }
-
-        .login-card button {
-            width: 100%;
-            padding: 12px;
-            background: var(--accent);
-            color: white;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-
-        .sidebar {
-            width: 260px;
-            background: var(--primary);
-            color: white;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .sidebar-header {
-            padding: 30px 20px;
-            text-align: center;
-            border-bottom: 1px solid #1e293b;
-        }
-
-        .nav-item {
-            padding: 18px 25px;
-            cursor: pointer;
-            transition: 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            color: #94a3b8;
-        }
-
-        .nav-item:hover {
-            background: #1e293b;
-            color: white;
-        }
-
-        .nav-item.active {
-            background: var(--accent);
-            color: white;
-        }
-
-        .main-content {
-            flex-grow: 1;
-            overflow-y: auto;
-            padding: 30px;
-        }
-
-        .page {
-            display: none;
-        }
-
-        .page.active {
-            display: block;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-bottom: 25px;
-        }
-
-        .stat-card {
-            background: white;
-            padding: 25px;
-            border-radius: 15px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-        }
-
-        .stat-card h3 {
-            margin: 0;
-            font-size: 0.9rem;
-            color: #64748b;
-        }
-
-        .stat-card .value {
-            font-size: 2.2rem;
-            font-weight: bold;
-            margin: 10px 0;
-        }
-
-        .chart-grid {
-            display: grid;
-            grid-template-columns: 1fr 2fr;
-            gap: 25px;
-        }
-
-        .chart-card {
-            background: white;
-            padding: 20px;
-            border-radius: 15px;
-        }
-
-        .chart-wrapper {
-            height: 280px;
-        }
-
-        .table-container {
-            background: white;
-            border-radius: 15px;
-            overflow: hidden;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        th {
-            background: #f1f5f9;
-            padding: 15px;
-            text-align: left;
-        }
-
-        td {
-            padding: 15px;
-            border-bottom: 1px solid #f1f5f9;
-        }
-
-        .badge {
-            padding: 5px 12px;
-            border-radius: 30px;
-            font-size: 0.75rem;
-            font-weight: bold;
-            color: white;
-        }
-
-        .bg-success {
-            background: var(--success);
-        }
-
-        .bg-danger {
-            background: var(--danger);
-        }
-
-        .bg-warning {
-            background: var(--warning);
-        }
-
-        .filter-bar {
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
-            display: flex;
-            gap: 12px;
-            margin-bottom: 25px;
-            flex-wrap: wrap;
-        }
-
-        .filter-bar select,
-        .filter-bar input {
-            padding: 10px 15px;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            flex: 1;
-            min-width: 150px;
-        }
-
-        .bc-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
-
-        .bc-card {
-            background: white;
-            padding: 25px;
-            border-radius: 15px;
-        }
-
-        .bc-card h4 {
-            margin: 0 0 15px 0;
-            color: #475569;
-        }
-
-        .bc-checkbox-grid {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-
-        .bc-chip {
-            display: none;
-        }
-
-        .bc-chip+label {
-            padding: 10px 20px;
-            background: #f1f5f9;
-            border: 1px solid #e2e8f0;
-            border-radius: 25px;
-            cursor: pointer;
-        }
-
-        .bc-chip:checked+label {
-            background: var(--accent);
-            color: white;
-        }
-
-        .bc-chip.dept:checked+label {
-            background: var(--success);
-        }
-
-        .bc-message-card {
-            background: white;
-            padding: 25px;
-            border-radius: 15px;
-            margin-top: 20px;
-        }
-
-        .bc-textarea {
-            width: 100%;
-            min-height: 150px;
-            padding: 15px;
-            border: 1px solid #e2e8f0;
-            border-radius: 12px;
-            font-family: 'Sarabun';
-            resize: vertical;
-            box-sizing: border-box;
-        }
-
-        .bc-send-btn {
-            margin-top: 20px;
-            padding: 15px 30px;
-            background: var(--accent);
-            border: none;
-            border-radius: 12px;
-            color: white;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-        }
-
-        .bc-send-btn:disabled {
-            background: #cbd5e0;
-        }
-
-        .bc-add-row {
-            display: flex;
-            gap: 10px;
-            margin-top: 15px;
-        }
-
-        .bc-add-row input {
-            flex: 1;
-            padding: 10px 15px;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-        }
-
-        .bc-add-row button {
-            padding: 10px 18px;
-            background: var(--success);
-            border: none;
-            border-radius: 8px;
-            color: white;
-            cursor: pointer;
-        }
-
-        .realtime-indicator {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 6px 12px;
-            background: #ecfdf5;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            color: var(--success);
-        }
-
-        .realtime-indicator .dot {
-            width: 8px;
-            height: 8px;
-            background: var(--success);
-            border-radius: 50%;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-
-            0%,
-            100% {
-                opacity: 1;
-            }
-
-            50% {
-                opacity: 0.5;
-            }
-        }
-
-        .action-btn {
-            background: none;
-            border: none;
-            cursor: pointer;
-            padding: 5px;
-        }
-
-        .btn-edit {
-            color: var(--accent);
-        }
-
-        .btn-delete {
-            color: var(--danger);
-        }
-
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 10000;
-        }
-
-        .modal-card {
-            background: white;
-            padding: 30px;
-            border-radius: 20px;
-            width: 100%;
-            max-width: 450px;
-        }
-
-        .modal-buttons {
-            display: flex;
-            gap: 10px;
-            margin-top: 25px;
-        }
-
-        .btn-modal {
-            flex: 1;
-            padding: 12px;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-    </style>
+      }
+    }
+  </script>
+  
+  <script crossorigin="anonymous" src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin="anonymous" src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  
+  <style>
+    * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
+    body { overscroll-behavior: none; margin: 0; padding: 0; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    .animate-enter { animation: fadeIn 0.25s ease-out, slideUp 0.3s ease-out; }
+    @keyframes badgePulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.85;transform:scale(1.05)} }
+    .badge-new { animation: badgePulse 1.5s ease-in-out infinite; }
+    .skeleton { background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%); background-size: 200% 100%; animation: skeleton 1.5s infinite; border-radius: 0.5rem; }
+    @keyframes skeleton { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+    .hover-lift { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+    .hover-lift:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,0,0,0.1); }
+  </style>
 </head>
+<body class="bg-slate-50 text-slate-800 antialiased font-sans overflow-hidden">
+  <div id="root"></div>
+  
+  <script type="text/babel">
+    const { useState, useMemo, useEffect, useCallback, useRef } = React;
 
-<body>
-    <div id="modalOverlay" class="modal-overlay">
-        <div class="modal-card">
-            <h2 id="modalTitle">จัดการข้อมูลพนักงาน</h2>
-            <input type="hidden" id="empKey">
-            <div style="margin-bottom:15px;"><label
-                    style="display:block;margin-bottom:5px;font-weight:bold;">เลขพนักงาน</label><input type="text"
-                    id="empId"
-                    style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;">
-            </div>
-            <div style="margin-bottom:15px;"><label
-                    style="display:block;margin-bottom:5px;font-weight:bold;">ชื่อ-นามสกุล</label><input type="text"
-                    id="empName"
-                    style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;">
-            </div>
-            <div style="margin-bottom:15px;"><label
-                    style="display:block;margin-bottom:5px;font-weight:bold;">สาขา</label><input type="text"
-                    id="empBranch"
-                    style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;">
-            </div>
-            <div style="margin-bottom:15px;"><label
-                    style="display:block;margin-bottom:5px;font-weight:bold;">แผนก</label><input type="text"
-                    id="empDept"
-                    style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;">
-            </div>
-            <div class="modal-buttons">
-                <button class="btn-modal" style="background:#e2e8f0;color:#475569;"
-                    onclick="closeModal()">ยกเลิก</button>
-                <button class="btn-modal" style="background:var(--accent);color:white;"
-                    onclick="handleSaveEmployee()">บันทึก</button>
-            </div>
-        </div>
-    </div>
+    const WEBHOOK_POST_URLS = {
+      moh: 'https://n8n.srv1038568.hstgr.cloud/webhook-test/a62e235f-0bfa-4637-a206-900c12cd018b',
+      form: 'https://n8n.srv1038568.hstgr.cloud/webhook-test/a62e235f-0bfa-4637-a206-900c12cd018b'
+    };
 
-    <div id="login-overlay">
-        <div class="login-card">
-            <i class="fas fa-user-shield fa-3x" style="color:var(--accent); margin-bottom:15px;"></i>
-            <h2>Safety Admin Login</h2>
-            <p style="color:#64748b; margin-bottom:20px;">🔥 Powered by Firebase</p>
-            <input type="text" id="username" placeholder="Username">
-            <input type="password" id="password" placeholder="Password">
-            <button onclick="handleLogin()">Login</button>
-        </div>
-    </div>
+    const WEBHOOK_GET_URLS = {
 
-    <div class="sidebar">
-        <div class="sidebar-header">
-            <h2><i class="fas fa-shield-alt"></i> SafetyApp</h2>
-        </div>
-        <div class="nav-item active" id="nav-dashboard" onclick="showPage('dashboard')"><i
-                class="fas fa-chart-line"></i> Dashboard</div>
-        <div class="nav-item" id="nav-activity" onclick="showPage('activity')"><i class="fas fa-history"></i>
-            รายการตอบกลับ</div>
-        <div class="nav-item" id="nav-employees" onclick="showPage('employees')"><i class="fas fa-users-cog"></i>
-            จัดการพนักงาน</div>
-        <div class="nav-item" id="nav-broadcast" onclick="showPage('broadcast')"><i class="fas fa-bullhorn"></i>
-            ส่งประกาศ</div>
-        <div class="nav-item" onclick="handleLogout()" style="margin-top:auto; color:var(--danger);"><i
-                class="fas fa-sign-out-alt"></i> ออกจากระบบ</div>
-    </div>
+      moh: 'https://n8n.srv1038568.hstgr.cloud/webhook/moh',
 
-    <div class="main-content">
-        <div id="dashboard" class="page active">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:25px;">
-                <h2>วิเคราะห์ข้อมูลความปลอดภัย</h2>
-                <span class="realtime-indicator"><span class="dot"></span> Realtime</span>
-            </div>
-            <div class="stats-grid">
-                <div class="stat-card" style="border-top:5px solid var(--accent);">
-                    <h3>พนักงานในเหตุการณ์</h3>
-                    <div id="total-val" class="value">0</div>
-                </div>
-                <div class="stat-card" style="border-top:5px solid var(--success);">
-                    <h3>ปลอดภัย</h3>
-                    <div id="accept-val" class="value" style="color:var(--success)">0</div>
-                </div>
-                <div class="stat-card" style="border-top:5px solid var(--danger);">
-                    <h3>ขอความช่วยเหลือ</h3>
-                    <div id="help-val" class="value" style="color:var(--danger)">0</div>
-                </div>
-                <div class="stat-card" style="border-top:5px solid var(--warning);">
-                    <h3>รอการตอบกลับ</h3>
-                    <div id="wait-val" class="value" style="color:var(--warning)">0</div>
-                </div>
-            </div>
-            <div class="chart-grid">
-                <div class="chart-card">
-                    <h4>สัดส่วนความปลอดภัย</h4>
-                    <div class="chart-wrapper"><canvas id="pieChart"></canvas></div>
-                </div>
-                <div class="chart-card">
-                    <h4>สถิติเปรียบเทียบ</h4>
-                    <div class="chart-wrapper"><canvas id="barChart"></canvas></div>
-                </div>
-            </div>
-        </div>
+      form: 'https://n8n.srv1038568.hstgr.cloud/webhook/a62e235f-0bfa-4637-a206-900c12cd018b' 
 
-        <div id="activity" class="page">
-            <h2 style="margin-bottom:20px;">รายการตอบกลับล่าสุด</h2>
-            <div class="filter-bar">
-                <select id="actStatusFilter" onchange="renderActivity()">
-                    <option value="all">ทุกสถานะ</option>
-                    <option value="Accept">ปลอดภัย</option>
-                    <option value="Help">ช่วยเหลือ</option>
-                    <option value="Wait">รอตอบกลับ</option>
-                </select>
-                <input type="text" id="searchAct" placeholder="ค้นหาชื่อ..." onkeyup="renderActivity()">
-            </div>
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>ชื่อ / เหตุการณ์</th>
-                            <th>สาขา</th>
-                            <th>แผนก</th>
-                            <th>สถานะ</th>
-                            <th>เวลา</th>
-                        </tr>
-                    </thead>
-                    <tbody id="activityTableBody"></tbody>
-                </table>
-            </div>
-        </div>
+    };
 
-        <div id="employees" class="page">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:25px;">
-                <h2>จัดการพนักงาน</h2>
-                <button onclick="openModal('add')"
-                    style="background:var(--success);color:white;border:none;padding:10px 20px;border-radius:10px;cursor:pointer;"><i
-                        class="fas fa-user-plus"></i> เพิ่มพนักงาน</button>
-            </div>
-            <div class="filter-bar"><input type="text" id="searchEmp" placeholder="ค้นหาชื่อ..."
-                    onkeyup="renderEmployees()"></div>
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>เลขพนักงาน</th>
-                            <th>ชื่อ-นามสกุล</th>
-                            <th>สาขา</th>
-                            <th>แผนก</th>
-                            <th>จัดการ</th>
-                        </tr>
-                    </thead>
-                    <tbody id="employeeTableBody"></tbody>
-                </table>
-            </div>
-        </div>
+    const CAMPUS_OPTIONS = ['หาดใหญ่', 'ปัตตานี', 'สุราษฎร์', 'ตรัง', 'ภูเก็ต'];
+    const FACULTY_BY_CAMPUS = {
+      'หาดใหญ่': ['วิทยาการจัดการ - ม่วงมะปราง', 'วิทยาศาสตร์ – เหลืองจันทร์', 'วิศวะ - เลือดหมู', 'ศิลปศาสตร์ - แดงอมส้ม', 'เศรษฐศาสตร์ - หมากสุก', 'วิทยาลัยนานาชาติ - น้ำเงินคาดเทา', 'ทรัพยากร - เขียวตอง', 'ทันตแพทย์ - ม่วงเข้ม', 'เทคนิคการแพทย์ - เลือดหมูคาดริบบิ้นทอง', 'นิติศาสตร์ - ขาวคาดดำ', 'แพทย์ - เขียวหัวเป็ด', 'แพทย์ สาขารังสี - เขียวหัวเป็ด', 'แพทย์ สาขากายภาพบำบัด - เขียวหัวเป็ด', 'เภสัช - เขียวมะกอก', 'พยาบาล - ต่วนแสดสะท้อนแสง', 'แพทย์แผนไทย - เหลืองบุนนาค', 'สัตวแพทย์ - ฟ้าหม่น', 'อุตสาหกรรม - ชมพู', 'บัณฑิตวิทยาลัย - น้ำเงิน', 'การจัดการสิ่งแวดล้อม – เขียวบางจาก'],
+      'ปัตตานี': ['มนุษยศาสตร์ - ขาว', 'วิทยาลัยอิสลาม - เทา', 'รัฐศาสตร์ - ดำ', 'สื่อสาร - เงิน', 'ศึกษาศาสตร์ - แสด', 'วิทย์ - เทคโนโลยี - แดงเลือดนก', 'ศิลปกรรม - เหลืองดิน', 'พยาบาล - ต่วนแสดสะท้อนแสง', 'บัณฑิตวิทยาลัย - น้ำเงิน'],
+      'สุราษฎร์': ['วิทย์เทคโน - ม่วงมังคุด', 'ศิลปศาสตร์ - การจัดการ - แดงอมส้มคาดเหลือง', 'วิทยาลัยนานาชาติ - น้ำเงินคาดเทา', 'ประมง - ส้มไฟ'],
+      'ตรัง': ['พาณิชยศาสตร์ - ฟ้า', 'สถาปัตยกรรม - น้ำตาล'],
+      'ภูเก็ต': ['วิเทศศึกษา - เปลือกไข่', 'วิศวะ - เลือดหมู YRC', 'วิทยาการคอมพิวเตอร์ - แดงคาดฟ้า', 'ท่องเที่ยว - บานเย็น', 'สิ่งแวดล้อม - ม่วงมะเขือ']
+    };
 
-        <div id="broadcast" class="page">
-            <h2 style="margin-bottom:25px;"><i class="fas fa-bullhorn"></i> ส่งประกาศแจ้งเตือน</h2>
-            <div class="bc-grid">
-                <div class="bc-card">
-                    <h4><i class="fas fa-building" style="color:var(--accent)"></i> เลือกสาขา</h4>
-                    <div class="bc-checkbox-grid" id="bcBranchGrid"></div>
-                    <div class="bc-add-row"><input type="text" id="bcNewBranch" placeholder="พิมพ์สาขาใหม่..."><button
-                            onclick="bcAddBranch()"><i class="fas fa-plus"></i></button></div>
-                </div>
-                <div class="bc-card">
-                    <h4><i class="fas fa-users" style="color:var(--success)"></i> เลือกแผนก</h4>
-                    <div class="bc-checkbox-grid" id="bcDeptGrid"></div>
-                    <div class="bc-add-row"><input type="text" id="bcNewDept" placeholder="พิมพ์แผนกใหม่..."><button
-                            onclick="bcAddDepartment()"><i class="fas fa-plus"></i></button></div>
-                </div>
-            </div>
-            <div class="bc-message-card">
-                <h4><i class="fas fa-comment-alt" style="color:var(--warning)"></i> ชื่อเหตุการณ์</h4>
-                <input type="text" id="bcEventName" placeholder="เช่น Fire Drill 2026"
-                    style="width:100%;padding:12px;border:1px solid #e2e8f0;border-radius:8px;margin-bottom:15px;box-sizing:border-box;">
-                <h4><i class="fas fa-envelope" style="color:var(--danger)"></i> ข้อความ</h4>
-                <textarea id="bcMessage" class="bc-textarea" placeholder="พิมพ์ข้อความประกาศ..."></textarea>
-                <button class="bc-send-btn" onclick="bcSendBroadcast()"><i class="fas fa-paper-plane"></i> ส่ง
-                    Broadcast</button>
-            </div>
-        </div>
-    </div>
+    const PACKAGE_OPTIONS = {
+      'ตรี': ['ตัดซื้อครุย รับชุดที่มหาวิทยาลัย โอน 2700 บาท', 'ตัดซื้อครุย + ถุงคลุม รับชุดที่มหาวิทยาลัย โอน 2800 บาท', 'ตัดซื้อครุย + ส่ง ems โอน 2880 บาท', 'ตัดซื้อครุย + ถุงคลุม + ส่ง ems โอน 2980 บาท', 'ตัดเช่าครุย รับชุดที่มหาวิทยาลัย โอน 1200 บาท (วันรับชุดจ่ายค่าประกัน 1,500)', 'เช่าครุย รับชุดที่มหาวิทยาลัย โอน 520 บาท (วันรับชุดจ่ายค่าประกัน 1,500 บาท)'],
+      'โท': ['ตัดซื้อครุย รับชุดที่มหาวิทยาลัย โอน 2800 บาท', 'ตัดซื้อครุย + ถุงคลุม รับชุดที่มหาวิทยาลัย โอน 2900 บาท', 'ตัดซื้อครุย + ส่ง ems โอน 2980 บาท', 'ตัดซื้อครุย + ถุงคลุม + ส่ง ems โอน 3080 บาท', 'ตัดเช่าครุย รับชุดที่มหาวิทยาลัย โอน 1300 บาท (วันรับชุดจ่ายค่าประกัน 1,500)', 'เช่าครุย รับชุดที่มหาวิทยาลัย โอน 570 บาท (วันรับชุดจ่ายค่าประกัน 1,500 บาท)'],
+      'เอก': ['ตัดซื้อครุย + ถุงคลุม รับชุดที่มหาวิทยาลัย โอน 9500 บาท', 'ตัดซื้อครุย + ถุงคลุม + ส่ง ems โอน 9750 บาท']
+    };
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-        import { getDatabase, ref, get, set, push, update, remove, onValue } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
+    const INNER_SUIT_SUB_OPTIONS = {
+      'เสื้อราชปะแตนพร้อมเครื่องหมาย': ['ตัดซื้อเสื้อราชพร้อมเครื่องหมาย โอน 2000 บาท', 'ตัดเช่าเสื้อราชพร้อมเครื่องหมาย โอน 1200 รับชุดที่วิทยาเขต (วันรับชุดจ่ายค่าประกัน 1000)', 'เช่าเสื้อราชพร้อมเครื่องหมาย โอน 520 บาท รับชุดที่วิทยาเขต (วันรับชุดจ่ายค่าประกัน 1000)'],
+      'ชุดว่าที่ร้อยตรี': ['ตัดซื้อชุดว่าที่ร้อยตรี = 2700 บาท (เสื้อขาวว่าที่ร้อยตรี + กางเกง *ไม่รวมเครื่องหมาย)', 'ซื้อเซ็ทเครื่องหมายว่าที่ร้อยตรี (อินทนู, นก, ราบ, กระดุม, แถบเครื่องราชฯ) โอน 1000 บาท', 'สั่งทำป้ายชื่อ = 250 บาท', 'ซื้อเซ็ทกระบี่ มี 4 อย่าง (กระบี่, ถุงมือ, พู่, ชายตรง) = 6500 บาท'],
+      'ชุดข้าราชการ': ['ตัดซื้อชุดข้าราชการ โอน 2500 บาท (ไม่รวมเครื่องหมาย)', 'เช่าชุดข้าราชการ โอน 800 บาท (ไม่รวมเครื่องหมาย) รับชุดที่วิทยาเขต วันรับชุดจ่ายค่าประกัน 1500 บาท']
+    };
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyDYMkvTCHQ0oRuYANj1Axc_z6HrRkbxCnI",
-            authDomain: "p2sowen.firebaseapp.com",
-            databaseURL: "https://p2sowen-default-rtdb.asia-southeast1.firebasedatabase.app",
-            projectId: "p2sowen",
-            storageBucket: "p2sowen.firebasestorage.app",
-            messagingSenderId: "432340752812",
-            appId: "1:432340752812:web:4cd4a2fc8182a111680209"
-        };
+    const THAI_MAP = {
+      'Timestamp': 'ประทับเวลา',
+      'Booking_Order_Number': 'เลขที่ใบสั่งจอง',
+      'Booking_Date': 'วันที่สั่งจอง',
+      'Title': 'คำนำหน้า',
+      'First_Name': 'ชื่อ',
+      'Last_Name': 'นามสกุล',
+      'Phone_Number': 'เบอร์มือถือ',
+      'Email': 'อีเมล',
+      'Institution': 'สถาบัน',
+      'Faculty': 'คณะ',
+      'Major': 'สาขา',
+      'Faculty_Color': 'สีประจำคณะ',
+      'Address_House_No': 'ที่อยู่ เลขที่',
+      'Address_Village': 'ที่อยู่ หมู่บ้าน',
+      'Address_Moo': 'ที่อยู่ หมู่',
+      'Address_Soi': 'ที่อยู่ ซอย',
+      'Address_Street': 'ที่อยู่ ถนน',
+      'Address_Sub_District': 'ที่อยู่ ตำบล/แขวง',
+      'Address_District': 'ที่อยู่ อำเภอ/เขต',
+      'Address_Province': 'ที่อยู่ จังหวัด',
+      'Postal_Code': 'รหัสไปรษณีย์',
+      'Weight_kg': 'น้ำหนัก',
+      'Height_cm': 'ส่วนสูง',
+      'Gown_Service_Type': 'ประเภทบริการ', 
+      'Order_Degree_Gown': 'สั่งจองชุดครุย',
+      'Order_Garment_Bag': 'สั่ง ถุงคลุม',
+      'Order_RajPattern_Suit': 'สั่ง ชุดราชปะแตน',
+      'Order_Insignia': 'สั่ง เครื่องหมาย',
+      'Order_Navy_Blue_Suit': 'สั่ง ชุดสูทสีกรมท่า',
+      'Order_White_Suit': 'สั่ง ชุดสูทสีขาว',
+      'Order_Student_Uniform': 'สั่ง ชุดนักศึกษา',
+      'RajPattern_Suit_Service_Type': 'ราชปะแตน/สูท ประเภทบริการ',
+      'Gown_Shoulder_Width_inch': 'ไหล่กว้าง ชุดครุย',
+      'Gown_Sleeve_Length_inch': 'แขนยาว ชุดครุย',
+      'Gown_Length_inch': 'เสื้อยาว ชุดครุย',
+      'Gown_Chest_inch': 'รอบอก ชุดครุย',
+      'Gown_Head_Circumference_inch': 'รอบศีรษะ ชุดครุย',
+      'RajPattern_Shoulder_Width_inch': 'ไหล่กว้าง เสื้อราชปะแตน',
+      'RajPattern_Neck_Circumference_inch': 'รอบคอ เสื้อราชปะแตน',
+      'RajPattern_Front_Shoulder_inch': 'บ่าหน้า เสื้อราชปะแตน',
+      'RajPattern_Back_Shoulder_inch': 'บ่าหลัง เสื้อราชปะแตน',
+      'RajPattern_Chest_inch': 'รอบอก เสื้อราชปะแตน',
+      'RajPattern_Sleeve_Length_inch': 'แขนยาว เสื้อราชปะแตน',
+      'RajPattern_Shirt_Length_inch': 'เสื้อยาว เสื้อราชปะแตน',
+      'RajPattern_Upper_Hip_inch': 'สะโพกบน เสื้อราชปะแตน',
+      'RajPattern_Waist_inch': 'รอบเอว เสื้อราชปะแตน',
+      'RajPattern_Lower_Hip_inch': 'สะโพกล่าง เสื้อราชปะแตน',
+      'RajPattern_Belly_Circumference_inch': 'รอบพุง เสื้อราชปะแตน',
+      'RajPattern_Crotch_inch': 'เป้า เสื้อราชปะแตน',
+      'RajPattern_Thigh_inch': 'ต้นขา เสื้อราชปะแตน',
+      'RajPattern_Pants_Skirt_Length_inch': 'กางเกงยาว เสื้อราชปะแตน',
+      'Gown_Price': 'ราคาครุย',
+      'Gown_Deposit': 'มัดจำครุย',
+      'Gown_Balance': 'คงเหลือครุย',
+      'RajPattern_Price': 'ราคาราชปะแตน',
+      'RajPattern_Deposit': 'มัดจำราชปะแตน',
+      'RajPattern_Balance': 'คงเหลือราชปะแตน',
+      'Student_ID': 'รหัสนักศึกษา',
+      'Address': 'ที่อยู่',
+      'Campus': 'วิทยาเขต',
+      'HatYai_Faculty_Color': 'วิทยาเขตหาดใหญ่ คณะ/สี',
+      'Pattani_Faculty_Color': 'วิทยาเขตปัตตานี คณะ / สี',
+      'SuratThani_Faculty_Color': 'วิทยาเขตสุราษฎร์ คณะ / สี',
+      'Trang_Faculty_Color': 'วิทยาเขตตรัง คณะ / สี',
+      'Phuket_Faculty_Color': 'วิทยาเขตภูเก็ต คณะ / สี',
+      'Order_Type': 'สั่งจอง',
+      'Degree_Level': 'ระดับปริญญา',
+      'Male_Inner_Suit_Choice': 'สำหรับบัณฑิตชาย เท่านั้น',
+      'Bachelor_Degree_Details': 'ปริญญาตรี',
+      'Master_Degree_Details': 'ปริญญาโท',
+      'Doctoral_Degree_Details': 'ปริญญาเอก',
+      'Order_Inner_Suit_Male': 'สั่งจองชุดด้านใน',
+      'RajPattern_Shirt_With_Insignia': 'เสื้อราชปะแตนพร้อมเครื่องหมาย',
+      'Acting_Sub_Lieutenant_Suit': 'ชุดว่าที่ร้อยตรี',
+      'Civil_Servant_Suit': 'ชุดข้าราชการ',
+      'General_Shoulder_Width_inch': 'ไหล่กว้างทั่วไป',
+      'General_Sleeve_Length_inch': 'แขนยาวทั่วไป',
+      'General_Chest_inch': 'รอบอกทั่วไป',
+      'General_Neck_Circumference_inch': 'รอบคอทั่วไป',
+      'General_Shirt_Length_inch': 'เสื้อยาวทั่วไป',
+      'General_Waist_inch': 'รอบเอวทั่วไป',
+      'General_Hip_inch': 'สะโพกทั่วไป',
+      'Crotch_Length_inch': 'เป้า',
+      'Thigh_Circumference_inch': 'ต้นขา',
+      'Pants_Length_inch': 'กางเกงยาว',
+      'Total_Transfer_Amount': 'ยอดโอน',
+      'Transfer_Slip_URL': 'Upload สลิปโอนเงิน',
+      'Suit_Number': 'เลขที่ชุด',
+      'Total_Inner_Suits': 'รวมชุดด้านใน',
+      'Booking_Details': 'รายละเอียดสั่งจอง',
+      'PDF_URL': 'PDF URL',
+      'Error_Alert': 'Error Alert',
+      'Status_Mail': 'Status mail',
+      'Send_Mail': 'Send mail'
+    };
 
-        const app = initializeApp(firebaseConfig);
-        const database = getDatabase(app);
+    const getCurrentTimestamp = () => {
+      const now = new Date();
+      return `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()}, ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+    };
 
-        // ==================== LINE Webhook URL (Apps Script) ====================
-        const LINE_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbwT-lPZwB1sZvC-zxrHtQ6i2FZdbg8BcJIeXjhlL9eA6usfpfUvXWxSUAbMkOrAWgjUmw/exec';
+    // ตัวแปลงและจัดระเบียบเวลาแบบใหม่ ให้ปลอดภัยและโชว์ตรงกันเสมอ (ทนทานต่อข้อมูลที่ผิดรูปแบบ)
+    const formatDateTime = (ts) => {
+      if (!ts || ts === 'null' || ts === 'undefined' || ts === '') return '-';
+      let str = String(ts).replace(/^\[DateTime:\s*/, '').replace(/\]$/, '').trim();
+      
+      // กรณี ISO 8601 (มีตัว T และลงท้ายด้วย Z) จาก Database
+      if (str.includes('T') && str.endsWith('Z')) {
+         const d = new Date(str);
+         if (!isNaN(d.getTime())) {
+            return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+         }
+      }
+      
+      // กรณีมาจาก Sheet เป็นข้อความเช่น "3/4/2026, 3:28:53"
+      const dateMatch = str.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+      const timeMatch = str.match(/(\d{1,2}):(\d{1,2})(?::(\d{1,2}))?/);
 
-        let rawData = [];
-        let employeesData = [];
-        let pieChart, barChart;
-        let currentAction = 'add';
+      if (dateMatch) {
+         const p1 = dateMatch[1].padStart(2, '0');
+         const p2 = dateMatch[2].padStart(2, '0');
+         const yr = dateMatch[3];
+         let timeStr = '';
+         if (timeMatch) {
+            timeStr = ` ${timeMatch[1].padStart(2, '0')}:${timeMatch[2].padStart(2, '0')}`;
+         }
+         return `${p1}/${p2}/${yr}${timeStr}`;
+      }
+      
+      return str;
+    };
 
-        // ==================== Auth ====================
-        window.handleLogin = async function () {
-            const user = document.getElementById('username').value;
-            const pass = document.getElementById('password').value;
-            if (!user || !pass) return;
-            Swal.fire({ title: 'กำลังตรวจสอบ...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-            try {
-                const snapshot = await get(ref(database, `users/${user}`));
-                if (snapshot.exists() && snapshot.val().password === pass) {
-                    Swal.fire({ icon: 'success', title: 'สำเร็จ', timer: 1500, showConfirmButton: false }).then(() => {
-                        localStorage.setItem('isLoggedIn', 'true');
-                        document.getElementById('login-overlay').style.display = 'none';
-                        initRealtimeListeners();
-                    });
-                } else {
-                    Swal.fire({ icon: 'error', title: 'รหัสไม่ถูกต้อง' });
-                }
-            } catch (e) {
-                Swal.fire({ icon: 'error', title: e.message });
+    // ลอจิกตรวจสอบรายการใหม่ แก้ปัญหาเวลาติดบัคจากเบราว์เซอร์
+    const isNew = (ts) => {
+      if (!ts) return false;
+      try {
+        let raw = String(ts).replace(/^\[DateTime:\s*/, '').replace(/\]$/, '').trim();
+        const now = Date.now();
+        const threshold = 5 * 60 * 60 * 1000; 
+
+        if (raw.includes('T') && raw.endsWith('Z')) {
+            const d = new Date(raw);
+            const diff = now - d.getTime();
+            return diff >= -86400000 && diff < threshold;
+        }
+
+        const dateMatch = raw.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+        const timeMatch = raw.match(/(\d{1,2}):(\d{1,2})(?::(\d{1,2}))?/);
+
+        if (dateMatch) {
+            const p1 = parseInt(dateMatch[1], 10);
+            const p2 = parseInt(dateMatch[2], 10);
+            const year = parseInt(dateMatch[3], 10);
+            
+            let hh = 0, mm = 0, ss = 0;
+            if (timeMatch) {
+                hh = parseInt(timeMatch[1], 10);
+                mm = parseInt(timeMatch[2], 10);
+                ss = timeMatch[3] ? parseInt(timeMatch[3], 10) : 0;
             }
-        };
 
-        window.handleLogout = function () { localStorage.removeItem('isLoggedIn'); location.reload(); };
+            // ลองเทียบทั้ง 2 รูปแบบ (ไทย และ US)
+            const d1 = new Date(year, p2 - 1, p1, hh, mm, ss); // ถอดความแบบ DD/MM/YYYY
+            const d2 = new Date(year, p1 - 1, p2, hh, mm, ss); // ถอดความแบบ MM/DD/YYYY
 
-        // ==================== Realtime ====================
-        function initRealtimeListeners() {
-            onValue(ref(database, 'logEvents'), (snapshot) => {
-                const data = snapshot.val();
-                rawData = data ? Object.keys(data).map(key => ({
-                    _key: key,
-                    'รายชื่อพนักงาน': data[key].employeeName || data[key]['รายชื่อพนักงาน'],
-                    'สาขา': data[key].branch || data[key]['สาขา'],
-                    'แผนก': data[key].department || data[key]['แผนก'],
-                    Event: data[key].event || data[key].Event,
-                    Reply: data[key].reply || data[key].Reply || 'Wait',
-                    Message: data[key].message || '',
-                    Time: data[key].time || data[key].Time
-                })).sort((a, b) => new Date(b.Time) - new Date(a.Time)) : [];
-                updateDashboard();
-                renderActivity();
-            });
+            const diff1 = now - d1.getTime();
+            const diff2 = now - d2.getTime();
 
-            onValue(ref(database, 'employees'), (snapshot) => {
-                const data = snapshot.val();
-                employeesData = data ? Object.keys(data).map(key => ({ _key: key, ...data[key] })) : [];
-                renderEmployees();
-            });
-
-            onValue(ref(database, 'config'), (snapshot) => {
-                const data = snapshot.val();
-                if (data) {
-                    if (data.branches) bcRenderBranches(data.branches);
-                    if (data.departments) bcRenderDepartments(data.departments);
-                }
-            });
+            // ถ้ารูปแบบไหนอยู่ในช่วง 48 ชั่วโมง ให้ถือว่าเป็น New หมด
+            if (diff1 >= -86400000 && diff1 < threshold) return true;
+            if (diff2 >= -86400000 && diff2 < threshold) return true;
+            
+            return false;
         }
 
-        // ==================== Dashboard ====================
-        function updateDashboard() {
-            const a = rawData.filter(d => d.Reply === 'Accept').length;
-            const h = rawData.filter(d => d.Reply === 'Help').length;
-            const w = rawData.filter(d => d.Reply === 'Wait').length;
-            document.getElementById('total-val').innerText = rawData.length;
-            document.getElementById('accept-val').innerText = a;
-            document.getElementById('help-val').innerText = h;
-            document.getElementById('wait-val').innerText = w;
-
-            if (pieChart) pieChart.destroy();
-            pieChart = new Chart(document.getElementById('pieChart'), {
-                type: 'doughnut',
-                data: { labels: ['ปลอดภัย', 'ช่วยเหลือ', 'รอตอบกลับ'], datasets: [{ data: [a, h, w], backgroundColor: ['#10b981', '#ef4444', '#f59e0b'] }] },
-                options: { responsive: true, maintainAspectRatio: false, cutout: '70%' }
-            });
-
-            const events = [...new Set(rawData.map(d => d.Event))].filter(Boolean);
-            if (barChart) barChart.destroy();
-            barChart = new Chart(document.getElementById('barChart'), {
-                type: 'bar',
-                data: {
-                    labels: events,
-                    datasets: [
-                        { label: 'ปลอดภัย', data: events.map(e => rawData.filter(d => d.Event === e && d.Reply === 'Accept').length), backgroundColor: '#10b981' },
-                        { label: 'ช่วยเหลือ', data: events.map(e => rawData.filter(d => d.Event === e && d.Reply === 'Help').length), backgroundColor: '#ef4444' },
-                        { label: 'รอตอบกลับ', data: events.map(e => rawData.filter(d => d.Event === e && d.Reply === 'Wait').length), backgroundColor: '#f59e0b' }
-                    ]
-                },
-                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
-            });
+        const dNative = new Date(raw);
+        if (!isNaN(dNative.getTime())) {
+            const diff = now - dNative.getTime();
+            if (diff >= -86400000 && diff < threshold) return true;
         }
 
-        // ==================== Activity ====================
-        window.renderActivity = function () {
-            const st = document.getElementById('actStatusFilter').value;
-            const s = document.getElementById('searchAct').value.toLowerCase();
-            const f = rawData.filter(d => (st === 'all' || d.Reply === st) && (d['รายชื่อพนักงาน'] || '').toLowerCase().includes(s));
-            document.getElementById('activityTableBody').innerHTML = f.map(i => `
-                <tr>
-                    <td><b>${i['รายชื่อพนักงาน'] || '-'}</b><br><small>${i.Event || '-'}</small></td>
-                    <td>${i['สาขา'] || '-'}</td>
-                    <td>${i['แผนก'] || '-'}</td>
-                    <td><span class="badge ${i.Reply === 'Accept' ? 'bg-success' : (i.Reply === 'Help' ? 'bg-danger' : 'bg-warning')}">${i.Reply}</span>${i.Reply === 'Help' && i.Message ? `<br><small style="color:var(--danger)">⚠️ ${i.Message}</small>` : ''}</td>
-                    <td>${i.Time ? new Date(i.Time).toLocaleString('th-TH') : '-'}</td>
-                </tr>
-            `).join('');
-        };
+        return false;
+      } catch { return false; }
+    };
 
-        // ==================== Employees ====================
-        window.renderEmployees = function () {
-            const s = document.getElementById('searchEmp').value.toLowerCase();
-            const f = employeesData.filter(d => (d['รายชื่อพนักงาน'] || '').toLowerCase().includes(s));
-            document.getElementById('employeeTableBody').innerHTML = f.map(i => `
-                <tr>
-                    <td>${i['เลขพนักงาน'] || '-'}</td>
-                    <td><b>${i['รายชื่อพนักงาน'] || '-'}</b></td>
-                    <td>${i['สาขา'] || '-'}</td>
-                    <td>${i['แผนก'] || '-'}</td>
-                    <td>
-                        <button class="action-btn btn-edit" onclick="openModal('edit', '${i._key}', '${i['เลขพนักงาน']}', '${i['รายชื่อพนักงาน']}', '${i['สาขา']}', '${i['แผนก']}')"><i class="fas fa-edit"></i></button>
-                        <button class="action-btn btn-delete" onclick="handleDelete('${i._key}')"><i class="fas fa-trash"></i></button>
-                    </td>
-                </tr>
-            `).join('');
-        };
+    const cleanLabel = (t) => {
+      let rawLabel = String(t || '').trim();
+      let label = THAI_MAP[rawLabel] || rawLabel;
+      label = label.replace(/_/g, ' ').replace(/\s+/g, ' ').trim();
+      
+      if (label.startsWith('ที่อยู่ ')) {
+        const subLabel = label.replace('ที่อยู่ ', '');
+        const replacements = { 'เลขที่': 'เลขที่', 'ซอย': 'ซอย', 'ถนน': 'ถนน', 'ตำบล': 'ตำบล/แขวง', 'แขวง': 'ตำบล/แขวง', 'อำเภอ': 'อำเภอ/เขต', 'เขต': 'อำเภอ/เขต', 'จังหวัด': 'จังหวัด', 'รายละเอียด': 'รายละเอียดเพิ่มเติม', 'หมู่บ้าน': 'หมู่บ้าน', 'หมู่': 'หมู่' };
+        return replacements[subLabel] || subLabel;
+      }
+      return label;
+    };
+    
+    const isEmpty = (v) => !v || v === '' || v === '-' || v === '----' || v === 'null' || v === 'undefined';
+    
+    const getFaculty = (o) => { 
+      if (!o) return '-'; 
+      for (const k of Object.keys(o)) { 
+        const c = cleanLabel(k);
+        if (c.includes('คณะ') && o[k] && o[k] !== '-' && o[k] !== '') return o[k]; 
+      } 
+      return o['Faculty'] || o['คณะ'] || o['Major'] || o['สาขา'] || '-'; 
+    };
 
-        window.openModal = function (action, key = '', empId = '', name = '', branch = '', dept = '') {
-            currentAction = action;
-            document.getElementById('modalTitle').innerText = action === 'add' ? 'เพิ่มพนักงานใหม่' : 'แก้ไขข้อมูล';
-            document.getElementById('empKey').value = key;
-            document.getElementById('empId').value = empId;
-            document.getElementById('empName').value = name;
-            document.getElementById('empBranch').value = branch;
-            document.getElementById('empDept').value = dept;
-            document.getElementById('modalOverlay').style.display = 'flex';
-        };
+    const buildFieldGroups = (headers, type) => {
+      if (!headers?.length) return [];
+      
+      const pick = (test) => headers.filter(h => {
+        const c = cleanLabel(h);
+        return (test(c, h)) && !c.includes('Upload สลิปโอนเงิน') && !['ปริญญาตรี', 'ปริญญาโท', 'ปริญญาเอก'].includes(c) && !['id'].includes(c);
+      });
+      
+      if (type === 'moh') {
+        return [
+          { id:'personal', title:'ข้อมูลส่วนตัว', icon:'user', fields: pick((c, h) => ['คำนำหน้า','ชื่อ','นามสกุล','เบอร์โทรศัพท์','เบอร์มือถือ','อีเมล','สถาบัน','วิทยาเขต','คณะ','สาขา','สีประจำคณะ'].includes(c) || /น้ำหนัก|ส่วนสูง|อายุ/.test(c)) },
+          { id:'address', title:'ที่อยู่จัดส่ง', icon:'map-pin', fields: pick((c, h) => c.startsWith('ที่อยู่') || h.startsWith('Address') || c === 'รหัสไปรษณีย์' || c === 'จังหวัด') },
+          { id:'requirements', title:'ความต้องการ', icon:'list', fields: pick((c, h) => c.startsWith('สั่ง') || h.startsWith('Order') || c.includes('ประเภทบริการ') || c.includes('หมายเหตุ') || c === 'รูปแบบการสั่งจอง') },
+          { id:'gown', title:'ชุดครุย', icon:'shirt', fields: pick((c, h) => c.includes('ครุย') || h.includes('Gown_')) },
+          { id:'formal', title:'ชุดด้านใน / ขนาด', icon:'tie', fields: pick((c, h) => c.startsWith('ราชปะแตน') || c.startsWith('สูท') || c.includes('ชุดว่าที่ร้อยตรี') || c.includes('ชุดข้าราชการ') || /ไหล่กว้าง|แขนยาว|รอบอก|รอบคอ|เสื้อยาว|รอบเอว|สะโพก|เป้า|ต้นขา|กางเกงยาว/.test(c) || h.includes('RajPattern') || h.includes('General')) },
+          { id:'system', title:'ข้อมูลระบบ', icon:'clock', fields: pick((c, h) => ['ประทับเวลา','TimeStamp','Timestamp','เลขที่ใบสั่งจอง','วันที่สั่งจอง','วันที่สร้าง','Row_Number','RowInSheet','Booking_Order_Number'].includes(h) || ['ประทับเวลา'].includes(c)), system: true }
+        ].filter(g => g.fields.length > 0);
+      }
+      return [
+        { id:'personal', title:'ข้อมูลส่วนตัว', icon:'user', fields: pick((c, h) => ['คำนำหน้า','ชื่อ','นามสกุล','รหัสนักศึกษา','เบอร์มือถือ'].includes(c) || /อีเมล|ส่วนสูง|น้ำหนัก|อายุ/.test(c)) },
+        { id:'address', title:'ที่อยู่จัดส่ง', icon:'map-pin', fields: pick((c, h) => c.includes('ที่อยู่') || h.startsWith('Address') || c === 'รหัสไปรษณีย์' || c === 'จังหวัด') },
+        { id:'campus', title:'วิทยาเขต / คณะ', icon:'building', fields: pick((c, h) => c === 'วิทยาเขต' || (c.includes('วิทยาเขต') && c.includes('คณะ')) || c === 'คณะ') },
+        { id:'order', title:'การสั่งจอง', icon:'cart', fields: pick((c, h) => /สั่งจอง|ปริญญา|บัณฑิต|ราชปะแตน.*เครื่องหมาย|ว่าที่|ข้าราชการ|รูปแบบการสั่งจอง/.test(c) || h.includes('Order_') || h.includes('Degree_')) },
+        { id:'gown-size', title:'ขนาดชุดครุย', icon:'ruler', fields: pick((c, h) => c.includes('ชุดครุย') && /(นิ้ว|ไหล่|แขน|เสื้อ|รอบ|อก|เอว)/.test(c)) },
+        { id:'formal-size', title:'ขนาดชุดด้านใน', icon:'ruler', fields: pick((c, h) => (c.includes('เสื้อราชปะแตน') || /ไหล่กว้าง|แขนยาว|รอบอก|รอบคอ|เสื้อยาว|รอบเอว|สะโพก|เป้า|ต้นขา|กางเกงยาว/.test(c)) && !/เครื่องหมาย|สั่งจอง|ชุดครุย/.test(c)) },
+        { id:'payment', title:'การชำระเงิน', icon:'credit-card', fields: pick((c, h) => /ยอดโอน|สลิป|Upload|ชำระเงิน|ธนาคาร/.test(c)) },
+        { id:'system', title:'ข้อมูลระบบ', icon:'clock', fields: pick((c, h) => /เลขที่ชุด|วันที่จอง|รวมชุด|รายละเอียด|PDF|Status|Send|Error|ประทับเวลา|Row_Number|RowInSheet|Suit_Number/.test(c) || h === 'Timestamp'), system: true },
+        { id:'checklist', title:'✅ รายการตรวจสอบ', icon:'check-circle', fields: pick((c, h) => c.startsWith('ck_') || c.startsWith('check_')) }
+      ].filter(g => g.fields.length > 0);
+    };
 
-        window.closeModal = function () { document.getElementById('modalOverlay').style.display = 'none'; };
+    const Badge = ({ children, variant='default', className='' }) => {
+      const variants = { default: 'bg-slate-100 text-slate-600', primary: 'bg-blue-100 text-blue-700', success: 'bg-emerald-100 text-emerald-700', warning: 'bg-amber-100 text-amber-700', danger: 'bg-red-100 text-red-700', new: 'bg-red-500 text-white badge-new' };
+      return <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${variants[variant]} ${className}`}>{children}</span>;
+    };
 
-        window.handleSaveEmployee = async function () {
-            const key = document.getElementById('empKey').value;
-            const data = { 'เลขพนักงาน': document.getElementById('empId').value, 'รายชื่อพนักงาน': document.getElementById('empName').value, 'สาขา': document.getElementById('empBranch').value, 'แผนก': document.getElementById('empDept').value, Register: 'TRUE', Status: 'active' };
-            try {
-                if (currentAction === 'add') await push(ref(database, 'employees'), data);
-                else await update(ref(database, `employees/${key}`), data);
-                Swal.fire({ icon: 'success', title: 'บันทึกสำเร็จ', timer: 1500, showConfirmButton: false });
-                closeModal();
-            } catch (e) { Swal.fire({ icon: 'error', title: e.message }); }
-        };
+    const Icon = ({ name, className="w-4 h-4" }) => {
+      const icons = {
+        'user': <><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></>,
+        'map-pin': <><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></>,
+        'list': <><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></>,
+        'shirt': <><path d="M20.38 3.46L16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"/></>,
+        'tie': <><path d="M14 9a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v4z"/><path d="M6 21v-2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v2"/><path d="M12 11v10"/></>,
+        'clock': <><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></>,
+        'cart': <><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></>,
+        'building': <><path d="M3 21h18"/><path d="M5 21V7l8-4v18"/><path d="M19 21V11l-6-4"/><path d="M9 9v.01"/><path d="M9 12v.01"/><path d="M9 15v.01"/><path d="M9 18v.01"/></>,
+        'ruler': <><path d="M21.8 13.561L17.3 9.06a2.1 2.1 0 0 0-2.97 0L3 20.39V21h.61L14.94 9.67a2.1 2.1 0 0 0 0-2.97L10.44 2.2"/><path d="M14.5 6.5l3 3"/><path d="M2.5 18.5l3 3"/><path d="M7 12l3 3"/><path d="M11.5 16.5l3 3"/></>,
+        'credit-card': <><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></>,
+        'check-circle': <><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></>,
+        'search': <><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></>,
+        'plus': <><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></>,
+        'chevron-left': <><polyline points="15 18 9 12 15 6"/></>,
+        'chevron-right': <><polyline points="9 18 15 12 9 6"/></>,
+        'x': <><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>,
+        'refresh': <><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></>,
+        'upload': <><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></>,
+        'edit': <><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></>,
+        'file': <><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></>,
+        'check': <><polyline points="20 6 9 17 4 12"/></>,
+        'info': <><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></>
+      };
+      return (
+        <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{icons[name] || icons['info']}</svg>
+      );
+    };
 
-        window.handleDelete = async function (key) {
-            const result = await Swal.fire({ title: 'ยืนยันการลบ?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'ลบ' });
-            if (result.isConfirmed) { await remove(ref(database, `employees/${key}`)); Swal.fire({ icon: 'success', title: 'ลบแล้ว', timer: 1500, showConfirmButton: false }); }
-        };
+    const Skeleton = ({ className="" }) => <div className={`skeleton ${className}`}></div>;
+    
+    const Toast = ({ message, type='info', onClose }) => {
+      useEffect(() => { const t = setTimeout(onClose, 3500); return () => clearTimeout(t); }, [onClose]);
+      const styles = { info: { bg:'bg-slate-800', icon:'info' }, success: { bg:'bg-emerald-600', icon:'check' }, error: { bg:'bg-red-600', icon:'x' }, warning: { bg:'bg-amber-600', icon:'info' } };
+      return (
+        <div className="fixed bottom-4 right-4 z-50 animate-enter">
+          <div className={`${styles[type].bg} text-white px-4 py-3 rounded-xl shadow-lg flex items-center gap-3 min-w-[280px] max-w-sm`}>
+            <Icon name={styles[type].icon} className="w-5 h-5 flex-shrink-0"/>
+            <span className="text-sm font-medium flex-1">{message}</span>
+            <button onClick={onClose} className="p-1 hover:bg-white/20 rounded-lg"><Icon name="x" className="w-4 h-4"/></button>
+          </div>
+        </div>
+      );
+    };
 
-        // ==================== Broadcast ====================
-        function bcRenderBranches(branches) { document.getElementById('bcBranchGrid').innerHTML = branches.map((b, i) => `<input type="checkbox" class="bc-chip" id="bc-branch-${i}" value="${b}"><label for="bc-branch-${i}">${b}</label>`).join(''); }
-        function bcRenderDepartments(departments) { document.getElementById('bcDeptGrid').innerHTML = departments.map((d, i) => `<input type="checkbox" class="bc-chip dept" id="bc-dept-${i}" value="${d}"><label for="bc-dept-${i}">${d}</label>`).join(''); }
+    const App = () => {
+      const [activeTab, setActiveTab] = useState('moh');
+      const [selectedOrder, setSelectedOrder] = useState(null);
+      const [searchQuery, setSearchQuery] = useState('');
+      const [filters, setFilters] = useState({ showNewOnly: false });
+      const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+      const [isLoading, setIsLoading] = useState(true);
+      const [toast, setToast] = useState(null);
+      const [mohData, setMohData] = useState([]);
+      const [formData, setFormData] = useState([]);
+      const [mohGroups, setMohGroups] = useState([]);
+      const [formGroups, setFormGroups] = useState([]);
+      
+      const [isAdding, setIsAdding] = useState(false);
+      const [editingOrder, setEditingOrder] = useState(null);
+      
+      const searchInputRef = useRef(null);
 
-        window.bcAddBranch = async function () {
-            const name = document.getElementById('bcNewBranch').value.trim();
-            if (!name) return;
-            const snapshot = await get(ref(database, 'config/branches'));
-            const branches = snapshot.val() || [];
-            if (!branches.includes(name)) { branches.push(name); await set(ref(database, 'config/branches'), branches); document.getElementById('bcNewBranch').value = ''; }
-        };
+      const fetchAllData = async () => {
+        setIsLoading(true);
+        const ts = new Date().getTime(); 
 
-        window.bcAddDepartment = async function () {
-            const name = document.getElementById('bcNewDept').value.trim();
-            if (!name) return;
-            const snapshot = await get(ref(database, 'config/departments'));
-            const departments = snapshot.val() || [];
-            if (!departments.includes(name)) { departments.push(name); await set(ref(database, 'config/departments'), departments); document.getElementById('bcNewDept').value = ''; }
-        };
-
-        window.bcSendBroadcast = async function () {
-            const message = document.getElementById('bcMessage').value.trim();
-            const eventName = document.getElementById('bcEventName').value.trim() || 'Alert';
-            const branches = Array.from(document.querySelectorAll('#bcBranchGrid input:checked')).map(cb => cb.value);
-            const departments = Array.from(document.querySelectorAll('#bcDeptGrid input:checked')).map(cb => cb.value);
-
-            if (!message) { Swal.fire({ icon: 'warning', title: 'กรุณาพิมพ์ข้อความ' }); return; }
-            if (branches.length === 0) { Swal.fire({ icon: 'warning', title: 'กรุณาเลือกสาขา' }); return; }
-            if (departments.length === 0) { Swal.fire({ icon: 'warning', title: 'กรุณาเลือกแผนก' }); return; }
-
-            Swal.fire({ title: 'กำลังส่ง Broadcast...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-
-            try {
-                // บันทึกลง Firebase
-                await push(ref(database, 'broadcasts'), { message, eventName, branches, departments, timestamp: new Date().toISOString(), status: 'sent' });
-
-                // ส่งไปยัง Apps Script เพื่อ Push LINE Message
-                const params = new URLSearchParams({
-                    action: 'broadcast',
-                    message: message,
-                    event: eventName,
-                    branches: branches.join(','),
-                    departments: departments.join(',')
+        const fetchJSON = async (url) => {
+          try {
+            const res = await fetch(url + `?nocache=${ts}`, {
+                method: 'GET',
+                headers: { 'Accept': 'application/json' }
+            });
+            if (!res.ok) throw new Error('Network response was not ok');
+            const json = await res.json();
+            
+            let dataArray = Array.isArray(json) ? json : (json.data || [json]);
+            
+            return dataArray.map((item, idx) => {
+                const cleanItem = {};
+                Object.keys(item).forEach(k => {
+                    cleanItem[k] = item[k] === null || item[k] === undefined ? '' : String(item[k]);
                 });
+                
+                cleanItem['Row_Number'] = cleanItem['id'] || cleanItem['RowInSheet'] || String(idx);
+                return cleanItem;
+            }).reverse(); 
 
-                // เรียก Apps Script webhook
-                await fetch(`${LINE_WEBHOOK_URL}?${params.toString()}`, { mode: 'no-cors' });
-
-                Swal.fire({ icon: 'success', title: 'ส่ง Broadcast สำเร็จ! 🎉', text: 'ข้อความถูกส่งไปยัง LINE แล้ว', timer: 2000, showConfirmButton: false });
-                document.getElementById('bcMessage').value = '';
-                document.getElementById('bcEventName').value = '';
-            } catch (e) {
-                Swal.fire({ icon: 'error', title: e.message });
-            }
+          } catch (e) {
+            console.error(e);
+            return [];
+          }
         };
 
-        // ==================== UI ====================
-        window.showPage = function (pId) {
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-            document.getElementById(pId).classList.add('active');
-            document.getElementById('nav-' + pId).classList.add('active');
-        };
+        try {
+          const [mohParsed, formParsed] = await Promise.all([
+            fetchJSON(WEBHOOK_GET_URLS.moh),
+            fetchJSON(WEBHOOK_GET_URLS.form)
+          ]);
 
-        // ==================== Init ====================
-        window.addEventListener('load', () => {
-            if (localStorage.getItem('isLoggedIn') === 'true') {
-                document.getElementById('login-overlay').style.display = 'none';
-                initRealtimeListeners();
-            }
-            document.getElementById('password').addEventListener('keypress', e => { if (e.key === 'Enter') handleLogin(); });
+          setMohData(mohParsed);
+          if (mohParsed[0]) setMohGroups(buildFieldGroups(Object.keys(mohParsed[0]), 'moh'));
+          
+          setFormData(formParsed);
+          if (formParsed[0]) setFormGroups(buildFieldGroups(Object.keys(formParsed[0]), 'form'));
+
+        } catch (err) {
+          setToast({ message: `โหลดข้อมูลไม่สำเร็จ กรุณาลองใหม่`, type: 'error' });
+        } finally {
+          setIsLoading(false);
+        }
+      };
+
+      useEffect(() => {
+        fetchAllData();
+      }, []);
+
+      const handleRefresh = () => {
+        setSearchQuery('');
+        fetchAllData(); 
+      };
+
+      useEffect(() => {
+        const handleKey = (e) => {
+          const isModalOpen = isAdding || editingOrder;
+          if (e.key === '/' && !isModalOpen && document.activeElement?.tagName !== 'INPUT' && document.activeElement?.tagName !== 'TEXTAREA') { 
+            e.preventDefault(); searchInputRef.current?.focus(); 
+          }
+          if (e.key === 'Escape') { 
+            if (selectedOrder) setSelectedOrder(null); 
+            if (isSidebarOpen) setIsSidebarOpen(false); 
+            if (isAdding) setIsAdding(false); 
+            if (editingOrder) setEditingOrder(null);
+          }
+          if (e.key === 'n' && !isModalOpen && !selectedOrder) { 
+            e.preventDefault(); setIsAdding(true); 
+          }
+        };
+        window.addEventListener('keydown', handleKey);
+        return () => window.removeEventListener('keydown', handleKey);
+      }, [selectedOrder, isSidebarOpen, isAdding, editingOrder]);
+
+      const currentData = activeTab === 'moh' ? mohData : formData;
+      const currentGroups = activeTab === 'moh' ? mohGroups : formGroups;
+      
+      const getTimestamp = (item) => item['Timestamp'] || item['TimeStamp'] || item['ประทับเวลา'] || item['createdAt'] || item['Booking_Date'] || item['วันที่สั่งจอง'] || '';
+      
+      const getOrderId = (item) => {
+        if (activeTab === 'moh') return item['Booking_Order_Number'] || item['เลขที่ใบสั่งจอง'] || '-';
+        return item['Suit_Number'] || item['เลขที่ชุด'] || '-';
+      };
+      
+      const themeClasses = activeTab === 'moh' 
+        ? { gradient: 'from-blue-600 to-indigo-600', text: 'text-blue-700', soft: 'bg-blue-50', border: 'border-blue-200', btn: 'bg-blue-600 hover:bg-blue-700 shadow-blue-200', badge: 'primary', progress: 'from-blue-600 to-indigo-600', progressActive: 'bg-blue-500', progressDone: 'bg-blue-400' }
+        : { gradient: 'from-emerald-600 to-teal-600', text: 'text-emerald-700', soft: 'bg-emerald-50', border: 'border-emerald-200', btn: 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-200', badge: 'success', progress: 'from-emerald-600 to-teal-600', progressActive: 'bg-emerald-500', progressDone: 'bg-emerald-400' };
+
+      const filteredData = useMemo(() => {
+        return currentData.filter(item => {
+          let q = searchQuery.toLowerCase().trim();
+          
+          const titleField = item['คำนำหน้า'] || item['Title'] || '';
+          const nameField = item['ชื่อ'] || item['First_Name'] || '';
+          const lastNameField = item['นามสกุล'] || item['Last_Name'] || '';
+          const studentIdField = item['รหัสนักศึกษา'] || item['Student_ID'] || '';
+          const orderId = getOrderId(item);
+          
+          let targetText = `${titleField} ${nameField} ${lastNameField} ${studentIdField} ${orderId}`.toLowerCase();
+          targetText = targetText.replace(/น\.ส\./g, 'นางสาว');
+          q = q.replace(/น\.ส\./g, 'นางสาว');
+          
+          const matchSearch = !q || targetText.includes(q);
+          const matchNew = !filters.showNewOnly || isNew(getTimestamp(item));
+          
+          return matchSearch && matchNew;
         });
-    </script>
-</body>
+      }, [currentData, searchQuery, filters, activeTab]);
 
+      const handleSelect = useCallback((order) => { 
+        setSelectedOrder(order); 
+        if (window.innerWidth < 768) setIsSidebarOpen(false); 
+      }, []);
+      
+      const handleSave = useCallback(async (data) => { 
+        try { 
+          const targetWebhook = WEBHOOK_POST_URLS[data.tab] || WEBHOOK_POST_URLS['form'];
+
+          if (data.action === 'upload') {
+            const formDataObj = new FormData();
+            
+            data.files.forEach((file, index) => {
+               if (index === 0) {
+                   formDataObj.append('file', file);
+               } else {
+                   formDataObj.append(`file_${index}`, file); 
+               }
+            });
+
+            formDataObj.append('tab', data.tab);
+            formDataObj.append('action', 'upload');
+            if (data.Row_Number) formDataObj.append('Row_Number', data.Row_Number);
+
+            await fetch(targetWebhook, { method: 'POST', body: formDataObj });
+          } else {
+            const payload = { action: data.action, tab: data.tab, Row_Number: data.Row_Number, data: data.dataWithTimestamp };
+            await fetch(targetWebhook, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+          }
+
+          setToast({ message: '✓ บันทึกสำเร็จ! (กดรีเฟรชเพื่อดูข้อมูลใหม่)', type: 'success' }); 
+          setIsAdding(false); 
+          setEditingOrder(null);
+        } catch (e) { 
+          console.error("Webhook Error:", e);
+          setToast({ message: 'เชื่อมต่อ Webhook ไม่สำเร็จ (ดูใน Console)', type: 'error' }); 
+          setIsAdding(false); 
+          setEditingOrder(null);
+        } 
+      }, []);
+
+      if (isLoading) {
+        return (
+          <div className="h-screen flex flex-col items-center justify-center bg-slate-50 p-4">
+            <div className="w-14 h-14 border-4 border-slate-200 border-t-blue-600 rounded-full animate-spin mb-4"></div>
+            <p className="text-slate-600 font-medium">กำลังโหลดข้อมูล...</p>
+            <div className="mt-6 space-y-3 w-full max-w-md">
+              {[1,2,3,4].map(i => <Skeleton key={i} className="h-16 w-full"/>)}
+            </div>
+          </div>
+        );
+      }
+
+      return (
+        <div className="flex flex-col h-screen bg-slate-50">
+          <header className={`bg-gradient-to-r ${themeClasses.gradient} text-white px-4 py-3 shadow-lg sticky top-0 z-40`}>
+            <div className="flex items-center justify-between max-w-7xl mx-auto">
+              <div className="flex items-center gap-3">
+                <button onClick={() => setIsSidebarOpen(true)} className="md:hidden p-2 -ml-2 hover:bg-white/10 rounded-xl">
+                  <Icon name="list" className="w-6 h-6"/>
+                </button>
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 bg-white/20 rounded-xl flex items-center justify-center">
+                    <Icon name="shirt" className="w-5 h-5 text-white"/>
+                  </div>
+                  <div>
+                    <h1 className="font-bold text-base leading-tight">ร้านอมเรศ</h1>
+                    <p className="text-xs text-white/80 -mt-0.5">ท่าพระจันทร์</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="hidden sm:flex bg-white/15 rounded-xl p-1">
+                {[{id:'moh',label:'🧑 รายคน',count:mohData.length},{id:'form',label:'📋 ฟอร์มกลุ่ม',count:formData.length}].map(tab => (
+                  <button key={tab.id} onClick={() => {setActiveTab(tab.id);setSelectedOrder(null);setSearchQuery('');}} className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition-all flex items-center gap-1.5 ${activeTab===tab.id?'bg-white text-slate-800 shadow':'text-white/85 hover:text-white hover:bg-white/10'}`}>
+                    {tab.label} <Badge variant={activeTab===tab.id?'default':'new'} className="!py-0 !px-1.5">{tab.count}</Badge>
+                  </button>
+                ))}
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <button onClick={handleRefresh} className="p-2 hover:bg-white/10 rounded-xl hidden sm:flex" title="รีเฟรชข้อมูลล่าสุด">
+                  <Icon name="refresh" className="w-5 h-5"/>
+                </button>
+                <button onClick={() => setIsAdding(true)} className="flex items-center gap-2 bg-white text-slate-800 px-4 py-2 rounded-xl font-semibold text-sm hover:bg-slate-50 transition-all shadow-sm">
+                  <Icon name="plus" className="w-4 h-4"/> <span className="hidden sm:inline">เพิ่มรายการ</span>
+                </button>
+              </div>
+            </div>
+          </header>
+
+          <div className="flex flex-1 overflow-hidden">
+            <aside className={`${isSidebarOpen?'translate-x-0':'-translate-x-full'} md:translate-x-0 fixed md:static inset-y-0 left-0 z-30 w-80 bg-white border-r border-slate-200 flex flex-col transition-transform`}>
+              <div className="p-4 border-b border-slate-100">
+                <div className="flex items-center justify-between mb-3">
+                  <h2 className={`font-bold ${themeClasses.text}`}>
+                    {activeTab==='moh'?'📋 ใบจองรายคน':'📦 ใบจองจากฟอร์ม'}
+                  </h2>
+                  <div className="flex items-center gap-2">
+                    <Badge variant={themeClasses.badge}>{filteredData.length}</Badge>
+                    <button onClick={() => setIsSidebarOpen(false)} className="md:hidden p-1.5 hover:bg-slate-100 rounded-lg"><Icon name="x" className="w-5 h-5"/></button>
+                  </div>
+                </div>
+                
+                <div className="relative">
+                  <Icon name="search" className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"/>
+                  <input ref={searchInputRef} type="text" placeholder="ค้นหาชื่อ, รหัส, เลขที่... (กด /)" value={searchQuery} onChange={(e)=>setSearchQuery(e.target.value)} className="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"/>
+                </div>
+                
+                <div className="flex gap-2 mt-3">
+                  <button onClick={()=>setFilters(f=>({...f,showNewOnly:!f.showNewOnly}))} className={`flex-1 px-3 py-1.5 rounded-lg text-xs font-medium border transition-all flex items-center justify-center gap-1 ${filters.showNewOnly ? (activeTab==='moh'?'bg-blue-50 border-blue-200 text-blue-700':'bg-emerald-50 border-emerald-200 text-emerald-700') :'border-slate-200 text-slate-600 hover:bg-slate-50'}`}>
+                    {filters.showNewOnly && <span className="w-1.5 h-1.5 bg-red-500 rounded-full badge-new"></span>} ใหม่ 5 ชม.
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex-1 overflow-y-auto no-scrollbar p-2 space-y-1.5">
+                {filteredData.map((order, idx) => {
+                  const nName = order['ชื่อ'] || order['First_Name'] || '';
+                  const nLast = order['นามสกุล'] || order['Last_Name'] || '';
+                  const isSelected = selectedOrder && (selectedOrder['Row_Number'] === order['Row_Number']);
+                  
+                  return (
+                    <button key={`${order['Row_Number']}-${idx}`} onClick={()=>handleSelect(order)} className={`w-full text-left p-3.5 rounded-2xl transition-all relative ${isSelected ? `bg-white shadow-md ring-1 ring-slate-200 border-l-4 ${activeTab==='moh'?'border-blue-500':'border-emerald-500'}` :'hover:bg-slate-50 border-l-4 border-transparent'}`}>
+                      {isNew(getTimestamp(order)) && <span className="absolute -top-0.5 -right-0.5"><Badge variant="new" className="!text-[9px] !py-0 !px-1.5">NEW</Badge></span>}
+                      <div className="flex items-start justify-between gap-2 mb-1">
+                        <p className={`font-semibold text-sm truncate ${isSelected?themeClasses.text:'text-slate-700'}`}>
+                          {(order['รหัสนักศึกษา'] || order['Student_ID']) && <span className="font-mono text-xs text-slate-400 mr-1.5">{order['รหัสนักศึกษา'] || order['Student_ID']}</span>}
+                          {(order['คำนำหน้า'] || order['Title']) && <span className="text-slate-600">{order['คำนำหน้า'] || order['Title']} </span>} {nName} {nLast && <span className="text-slate-500"> {nLast}</span>}
+                        </p>
+                        <Badge variant={isSelected?themeClasses.badge:'default'} className="flex-shrink-0 text-[10px]">{getOrderId(order)}</Badge>
+                      </div>
+                      
+                      {/* จัด Layout วันที่ชิดขวาเสมอ */}
+                      <div className="flex items-center text-xs text-slate-400 mt-1">
+                        <span className="truncate pr-2">{getFaculty(order)}</span>
+                        <span className="ml-auto flex-shrink-0 pl-2 font-medium text-slate-400 whitespace-nowrap">{formatDateTime(getTimestamp(order))}</span>
+                      </div>
+                      
+                    </button>
+                  );
+                })}
+              </div>
+            </aside>
+
+            {isSidebarOpen && <div className="fixed inset-0 bg-black/30 z-20 md:hidden" onClick={()=>setIsSidebarOpen(false)}/>}
+
+            <main className="flex-1 overflow-y-auto bg-gradient-to-br from-slate-50 to-slate-100/50">
+              {selectedOrder ? (
+                <div className="max-w-5xl mx-auto p-4 md:p-6 lg:p-8 animate-enter">
+                  <div className="flex justify-between items-center mb-4">
+                    <button onClick={()=>setSelectedOrder(null)} className="md:hidden flex items-center gap-2 text-slate-600 hover:text-slate-800 px-3 py-2 bg-white rounded-xl border border-slate-200 shadow-sm text-sm">
+                      <Icon name="chevron-left" className="w-4 h-4"/> กลับ
+                    </button>
+                    <button onClick={() => setEditingOrder(selectedOrder)} className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl text-sm font-semibold text-slate-700 border border-slate-200 hover:bg-slate-50 shadow-sm transition-all ml-auto">
+                      <Icon name="edit" className="w-4 h-4"/> แก้ไขข้อมูล
+                    </button>
+                  </div>
+                  
+                  <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-5 md:p-6 mb-5 relative overflow-hidden">
+                    <div className={`absolute top-0 right-0 w-48 h-48 bg-gradient-to-br ${themeClasses.gradient} rounded-full blur-3xl opacity-10 -translate-y-1/2 translate-x-1/2`}></div>
+                    <div className="relative z-10 flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex flex-wrap items-center gap-2 mb-2">
+                          <Badge variant={themeClasses.badge}>{selectedOrder['สถาบัน'] || selectedOrder['Institution'] || selectedOrder['วิทยาเขต'] || selectedOrder['Campus'] || '-'}</Badge>
+                          <span className="text-sm text-slate-500">{getFaculty(selectedOrder)}</span>
+                        </div>
+                        <h2 className="text-2xl md:text-3xl font-bold text-slate-900 leading-tight">
+                          {(selectedOrder['คำนำหน้า'] || selectedOrder['Title']) && <span className="text-slate-700">{selectedOrder['คำนำหน้า'] || selectedOrder['Title']} </span>}
+                          <span className="text-slate-900">{selectedOrder['ชื่อ'] || selectedOrder['First_Name']}</span>
+                          {(selectedOrder['นามสกุล'] || selectedOrder['Last_Name']) && <span className="text-slate-500 font-normal"> {selectedOrder['นามสกุล'] || selectedOrder['Last_Name']}</span>}
+                        </h2>
+                        {(selectedOrder['รหัสนักศึกษา'] || selectedOrder['Student_ID']) && <p className={`font-mono text-lg mt-1 ${themeClasses.text}`}>{selectedOrder['รหัสนักศึกษา'] || selectedOrder['Student_ID']}</p>}
+                      </div>
+                      <div className="flex-shrink-0 bg-slate-50 rounded-2xl p-4 border border-slate-100 min-w-[160px] text-center md:text-right">
+                        <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">{activeTab==='moh'?'เลขที่ใบจอง':'เลขที่ชุด'}</p>
+                        <p className={`text-2xl font-black ${themeClasses.text} tracking-tight`}>{getOrderId(selectedOrder)}</p>
+                        <p className="text-xs text-slate-400 mt-2 flex items-center md:justify-end gap-1"><Icon name="clock" className="w-3.5 h-3.5"/>{formatDateTime(getTimestamp(selectedOrder))}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    {currentGroups.map((group) => {
+                      const visibleFields = group.fields.filter(f => selectedOrder[f] && !isEmpty(selectedOrder[f]));
+                      
+                      return (
+                        <div key={group.id} className={`bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden ${group.system?'opacity-90':''}`}>
+                          <div className="w-full px-5 py-4 flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <div className={`w-8 h-8 rounded-xl ${themeClasses.soft} ${themeClasses.text} flex items-center justify-center`}><Icon name={group.icon} className="w-4 h-4"/></div>
+                              <h3 className="font-semibold text-slate-800">{group.title}</h3>
+                            </div>
+                          </div>
+                          <div className="px-5 pb-5 pt-0">
+                            <div className={`grid gap-3 ${group.fields.length>6?'grid-cols-2 lg:grid-cols-3':'grid-cols-2'}`}>
+                              {group.fields.map((field, idx) => { 
+                                const value = selectedOrder[field]; 
+                                let displayValue = isEmpty(value) ? '-' : value;
+                                if (['TimeStamp', 'ประทับเวลา', 'Timestamp', 'createdAt', 'Booking_Date', 'วันที่สั่งจอง'].includes(field)) displayValue = formatDateTime(value);
+                                return (
+                                  <div key={idx}>
+                                    <label className="block text-[11px] font-medium text-slate-400 mb-1 uppercase tracking-wide">{cleanLabel(field)}</label>
+                                    <div className={`px-3 py-2.5 rounded-xl text-sm font-medium break-words ${isEmpty(value)?'bg-slate-50 text-slate-300 border border-slate-100':'bg-white text-slate-800 border border-slate-200'}`}>
+                                      {['Row_Number', 'RowInSheet', 'id'].includes(field) && !isEmpty(value) ? <Badge variant="warning">ID/Row: {value}</Badge> : displayValue}
+                                    </div>
+                                  </div>
+                                ); 
+                              })}
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              ) : (
+                <div className="h-full flex flex-col items-center justify-center p-6 text-center animate-enter">
+                  <div className={`w-20 h-20 rounded-3xl ${themeClasses.soft} ${themeClasses.text} flex items-center justify-center mb-5 shadow-sm`}><Icon name={activeTab==='moh'?'user':'list'} className="w-10 h-10"/></div>
+                  <h3 className="text-xl font-bold text-slate-800 mb-2">เลือกรายการเพื่อดูรายละเอียด</h3>
+                  <p className="text-slate-500 text-sm max-w-xs mb-6">คลิกเลือกรายการจากเมนูด้านซ้าย หรือใช้ช่องค้นหาเพื่อหาข้อมูลที่ต้องการ</p>
+                </div>
+              )}
+            </main>
+          </div>
+
+          <button onClick={()=>setIsAdding(true)} className={`md:hidden fixed bottom-5 right-5 w-14 h-14 ${activeTab==='moh'?'bg-blue-600':'bg-emerald-600'} text-white rounded-full shadow-lg flex items-center justify-center z-30`}><Icon name="plus" className="w-7 h-7"/></button>
+
+          {(isAdding || editingOrder) && (
+            <OrderModal 
+              isOpen={isAdding || !!editingOrder} 
+              initialData={editingOrder} 
+              onClose={() => { setIsAdding(false); setEditingOrder(null); }} 
+              onSave={handleSave} 
+              groups={currentGroups} 
+              activeTab={activeTab}
+              themeClasses={themeClasses}
+            />
+          )}
+
+          {toast && <Toast message={toast.message} type={toast.type} onClose={()=>setToast(null)}/>}
+        </div>
+      );
+    };
+
+    const OrderModal = ({ isOpen, onClose, onSave, groups, activeTab, themeClasses, initialData }) => {
+      const [mode, setMode] = useState('choose');
+      const [step, setStep] = useState(1);
+      const [formData, setFormData] = useState({});
+      const [submitting, setSubmitting] = useState(false);
+      const [selectedFiles, setSelectedFiles] = useState([]);
+      const [dragOver, setDragOver] = useState(false);
+      const fileInputRef = useRef(null);
+      const isEditing = !!initialData; 
+      
+      if (!isOpen) return null;
+
+      useEffect(() => {
+        if (isOpen) {
+          if (isEditing) {
+            setMode('manual');
+            setFormData(initialData);
+            setStep(1);
+          } else {
+            setMode('choose');
+            setFormData({});
+            setStep(1);
+            setSelectedFiles([]);
+          }
+        }
+      }, [isOpen, initialData]);
+
+      const handleFileSelect = (newFiles) => {
+        if (!newFiles || newFiles.length === 0) return;
+        const filesArray = Array.from(newFiles);
+        setSelectedFiles(prev => [...prev, ...filesArray]);
+        if (fileInputRef.current) fileInputRef.current.value = ''; 
+      };
+
+      const handleSaveUpload = async () => {
+        if (selectedFiles.length === 0) return;
+        setSubmitting(true);
+        try {
+          await onSave({ action: 'upload', files: selectedFiles, tab: activeTab, Row_Number: initialData?.Row_Number });
+        } catch (e) { console.error(e); } finally { setSubmitting(false); }
+      };
+
+      const handleSaveManual = async () => {
+        setSubmitting(true);
+        try {
+          const dataToSave = { ...formData };
+          if (!isEditing) {
+              dataToSave['ประทับเวลา'] = getCurrentTimestamp();
+              dataToSave['Timestamp'] = getCurrentTimestamp();
+              dataToSave['TimeStamp'] = getCurrentTimestamp();
+          }
+          
+          await onSave({ action: isEditing ? 'edit' : 'add', dataWithTimestamp: dataToSave, tab: activeTab, Row_Number: initialData?.Row_Number });
+        } catch (e) { console.error(e); } finally { setSubmitting(false); }
+      };
+
+      const currentGroup = mode === 'manual' ? groups[step - 1] : null;
+      const progress = mode === 'manual' ? (step / Math.max(groups.length, 1)) * 100 : (mode === 'upload' ? 100 : 0);
+
+      const getSelectedCampus = () => {
+        return formData['วิทยาเขต'] || formData['Campus'] || formData['Institution'] || formData['สถาบัน'] || '';
+      };
+
+      const isMaleOrdering = () => {
+        const fieldName = currentGroup?.fields.find(f => cleanLabel(f).includes('สำหรับบัณฑิตชาย เท่านั้น'));
+        if (fieldName && formData[fieldName] === 'สั่งจอง') return true;
+        return false;
+      };
+
+      const getInnerSuitSelection = () => {
+        for (const key of Object.keys(formData)) {
+          if (cleanLabel(key).includes('สั่งจองชุดด้านใน')) return formData[key];
+        }
+        return null;
+      };
+
+      return (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white rounded-t-3xl sm:rounded-3xl w-full sm:max-w-2xl max-h-[92vh] sm:max-h-[90vh] flex flex-col shadow-2xl animate-slide-up">
+            
+            <div className="flex items-center justify-between p-5 border-b border-slate-100 shrink-0">
+              <div>
+                <h3 className="font-bold text-lg text-slate-800">
+                  {mode === 'choose' && 'เพิ่มรายการใหม่'}
+                  {mode === 'upload' && '📎 อัปโหลดไฟล์'}
+                  {mode === 'manual' && (isEditing ? '✏️ แก้ไขข้อมูล' : '✏️ กรอกข้อมูล')}
+                </h3>
+              </div>
+              <button onClick={onClose} disabled={submitting} className="p-2 hover:bg-slate-100 rounded-xl transition-colors"><Icon name="x" className="w-5 h-5"/></button>
+            </div>
+
+            {mode === 'manual' && <div className="h-1 bg-slate-100 shrink-0"><div className={`h-full bg-gradient-to-r ${themeClasses.progress} transition-all duration-500`} style={{width:`${progress}%`}}/></div>}
+
+            <div className="flex-1 overflow-y-auto">
+              {mode === 'choose' && !isEditing && (
+                <div className="p-6 md:p-8">
+                  <div className="text-center mb-8"><h4 className="text-xl font-bold text-slate-800">คุณต้องการเพิ่มข้อมูลด้วยวิธีไหน?</h4></div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-lg mx-auto">
+                    <button onClick={() => setMode('upload')} className="hover-lift group p-6 rounded-2xl border-2 border-slate-200 hover:border-blue-400 bg-white text-left transition-all">
+                      <div className="w-14 h-14 rounded-2xl bg-blue-100 text-blue-600 flex items-center justify-center mb-4 group-hover:bg-blue-600 group-hover:text-white transition-all group-hover:scale-110"><Icon name="upload" className="w-7 h-7"/></div>
+                      <h5 className="font-bold text-slate-800 text-lg mb-1 group-hover:text-blue-600">อัปโหลดไฟล์</h5>
+                      <p className="text-sm text-slate-500 leading-relaxed">แนบไฟล์ PDF, รูปภาพ หรือเอกสาร (แนบหลายไฟล์ได้)</p>
+                    </button>
+                    <button onClick={() => { setMode('manual'); setFormData(prev => ({ ...prev, 'ประทับเวลา': getCurrentTimestamp(), 'Timestamp': getCurrentTimestamp() })); }} className="hover-lift group p-6 rounded-2xl border-2 border-slate-200 hover:border-emerald-400 bg-white text-left transition-all">
+                      <div className="w-14 h-14 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center mb-4 group-hover:bg-emerald-600 group-hover:text-white transition-all group-hover:scale-110"><Icon name="edit" className="w-7 h-7"/></div>
+                      <h5 className="font-bold text-slate-800 text-lg mb-1 group-hover:text-emerald-600">กรอกข้อมูลเอง</h5>
+                      <p className="text-sm text-slate-500 leading-relaxed">พิมพ์กรอกรายละเอียดลงในฟอร์มทีละขั้นตอน</p>
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {mode === 'upload' && (
+                <div className="p-6 md:p-8">
+                  <div className="flex flex-col items-center">
+                    <div className={`w-full max-w-md border-2 border-dashed rounded-3xl p-6 sm:p-10 flex flex-col items-center text-center cursor-pointer transition-all ${dragOver ? 'border-blue-400 bg-blue-50 scale-[1.02]' : selectedFiles.length > 0 ? 'border-emerald-300 bg-emerald-50/30' : 'border-slate-200 hover:bg-blue-50/50'}`} onDragOver={(e) => { e.preventDefault(); setDragOver(true); }} onDragLeave={() => setDragOver(false)} onDrop={(e) => { e.preventDefault(); setDragOver(false); handleFileSelect(e.dataTransfer.files); }} onClick={() => selectedFiles.length === 0 && fileInputRef.current?.click()}>
+                      <input ref={fileInputRef} type="file" className="hidden" multiple accept=".jpg,.jpeg,.png,.pdf,.doc,.docx" onChange={(e) => handleFileSelect(e.target.files)}/>
+                      
+                      {selectedFiles.length > 0 ? (
+                        <div className="w-full">
+                          <div className="w-16 h-16 mx-auto rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center mb-4"><Icon name="check-circle" className="w-8 h-8"/></div>
+                          <div className="font-bold text-slate-800 text-lg mb-1 text-center">เลือกแล้ว {selectedFiles.length} ไฟล์</div>
+                          
+                          <div className="text-sm text-slate-500 mb-4 mt-3 space-y-1.5 max-h-40 overflow-y-auto text-left bg-white p-3 rounded-xl border border-slate-200 shadow-sm no-scrollbar">
+                            {selectedFiles.map((f, i) => (
+                              <div key={i} className="flex justify-between items-center bg-slate-50 border border-slate-100 p-2.5 rounded-lg">
+                                <span className="truncate pr-2 text-slate-700 font-medium">{f.name}</span>
+                                <button onClick={(e) => { e.stopPropagation(); setSelectedFiles(prev => prev.filter((_, idx) => idx !== i)); }} className="text-red-400 hover:bg-red-100 hover:text-red-600 p-1.5 rounded-md transition-colors shrink-0"><Icon name="x" className="w-4 h-4"/></button>
+                              </div>
+                            ))}
+                          </div>
+                          
+                          <button onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }} className="text-sm text-blue-600 font-semibold hover:text-blue-800 hover:bg-blue-100 px-4 py-2 rounded-lg transition-colors inline-flex items-center gap-2">
+                            <Icon name="plus" className="w-4 h-4" /> เพิ่มไฟล์อีก
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="py-6">
+                          <div className={`w-16 h-16 mx-auto rounded-2xl flex items-center justify-center mb-4 transition-all ${dragOver ? 'bg-blue-200 text-blue-600 scale-110' : 'bg-slate-100 text-slate-400'}`}><Icon name="upload" className="w-8 h-8"/></div>
+                          <div className="font-bold text-slate-700 text-lg mb-1">ลากไฟล์มาวางที่นี่</div>
+                          <div className="text-sm text-slate-500">หรือคลิกเพื่อเลือกไฟล์ (เลือกได้หลายไฟล์)</div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {mode === 'manual' && currentGroup && (
+                <div className="p-5 md:p-6">
+                  <div className="flex items-center justify-between pb-4 mb-4 border-b border-slate-100">
+                    <button onClick={() => { if (step > 1) setStep(s => s - 1); else if(isEditing) onClose(); else setMode('choose'); }} className="flex items-center gap-1.5 text-sm text-slate-400 hover:text-slate-600 font-medium transition-colors">
+                      <Icon name="chevron-left" className="w-4 h-4"/> {step > 1 ? 'ก่อนหน้า' : (isEditing ? 'ยกเลิก' : 'กลับ')}
+                    </button>
+                    <div className="text-right"><span className="text-xs font-bold px-2.5 py-1 rounded-lg bg-slate-100 text-slate-600">{step} / {groups.length}</span></div>
+                  </div>
+
+                  <div className="flex items-center gap-3 mb-5">
+                    <div className={`w-10 h-10 rounded-xl ${themeClasses.soft} ${themeClasses.text} flex items-center justify-center`}><Icon name={currentGroup.icon} className="w-5 h-5"/></div>
+                    <div><h4 className="font-semibold text-slate-800">{currentGroup.title}</h4></div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {currentGroup.fields.map((field, idx) => {
+                      const cLabel = cleanLabel(field);
+                      
+                      if (cLabel === 'รูปแบบการสั่งจอง' && activeTab === 'moh') return null;
+                      
+                      const isLong = field.length > 30 || /ที่อยู่|หมายเหตุ|รายละเอียด/.test(field);
+                      const isReadOnly = ['ประทับเวลา', 'TimeStamp', 'Timestamp', 'Row_Number', 'id', 'RowInSheet'].includes(field);
+                      
+                      const isCampusField = cLabel === 'วิทยาเขต' || cLabel === 'สถาบัน';
+                      const isDegreeField = field.includes('ปริญญา') && field.length > 10;
+                      
+                      const isMaleOnlyOrderField = cLabel.includes('สำหรับบัณฑิตชาย เท่านั้น') || cLabel.includes('บัณฑิตหญิงเลือก "ไม่สั่งจอง"');
+                      const isInnerSuitOrderField = cLabel.includes('สั่งจองชุดด้านใน');
+                      
+                      const isSubOptionRajpattern = cLabel === 'เสื้อราชปะแตนพร้อมเครื่องหมาย';
+                      const isSubOptionSubLieutenant = cLabel === 'ชุดว่าที่ร้อยตรี';
+                      const isSubOptionOfficer = cLabel === 'ชุดข้าราชการ';
+                      
+                      const isRajpatternSizeField = cLabel.includes('เสื้อราชปะแตน') && /ไหล่กว้าง|แขนยาว|รอบอก|รอบคอ|เสื้อยาว|รอบเอว|สะโพก/.test(cLabel);
+                      const isOtherSuitSizeField = !cLabel.includes('เสื้อราชปะแตน') && /ไหล่กว้าง|แขนยาว|รอบอก|รอบคอ|เสื้อยาว|รอบเอว|สะโพก|เป้า|ต้นขา|กางเกงยาว/.test(cLabel) && !cLabel.includes('ครุย');
+                      
+                      const isFacultyRelated = (cLabel.includes('คณะ') || cLabel.startsWith('สาขา')) && !isDegreeField && !isCampusField;
+                      const isOrderTypeField = cLabel === 'สั่งจอง' || cLabel.includes('สั่ง_ครุย') || cLabel.includes('สั่งจอง_ครุย');
+
+                      const isYesNoField = ['สั่ง ถุงคลุม', 'สั่ง ชุดราชปะแตน', 'สั่ง ชุดสูทสีกรมท่า', 'สั่ง ชุดสูทสีขาว', 'สั่ง เครื่องหมาย', 'สั่ง ชุดนักศึกษา'].includes(cLabel);
+                      const isSuitServiceType = cLabel === 'ราชปะแตน/สูท ประเภทบริการ' || cLabel.includes('ประเภทบริการ');
+
+                      if (isInnerSuitOrderField && !isMaleOrdering()) return null;
+
+                      const innerSuitSelection = getInnerSuitSelection();
+                      if (isSubOptionRajpattern && innerSuitSelection !== 'สั่งจองเสื้อราชปะแตนพร้อมเครื่องหมาย') return null;
+                      if (isSubOptionSubLieutenant && innerSuitSelection !== 'สั่งจองชุดว่าที่ร้อยตรี') return null;
+                      if (isSubOptionOfficer && innerSuitSelection !== 'สั่งจองชุดข้าราชการ') return null;
+                      
+                      if (isRajpatternSizeField && innerSuitSelection !== 'สั่งจองเสื้อราชปะแตนพร้อมเครื่องหมาย') return null;
+                      if (isOtherSuitSizeField && (innerSuitSelection !== 'สั่งจองชุดว่าที่ร้อยตรี' && innerSuitSelection !== 'สั่งจองชุดข้าราชการ')) return null;
+
+                      if (isFacultyRelated) {
+                         const selectedCampus = getSelectedCampus();
+                         const isSpecificCampusField = CAMPUS_OPTIONS.some(c => cLabel.includes(c));
+                         if (isSpecificCampusField) {
+                             if (!selectedCampus || !cLabel.includes(selectedCampus)) return null; 
+                         }
+                      }
+
+                      if (isReadOnly) {
+                        return (
+                          <div key={idx} className={isLong?'sm:col-span-2':''}>
+                            <label className="block text-sm font-medium text-slate-600 mb-1.5">{cLabel} <span className="text-xs text-slate-400 font-normal">(อ่านอย่างเดียว)</span></label>
+                            <input type="text" readOnly value={formData[field]||''} className="w-full px-4 py-3 bg-slate-100 text-slate-500 cursor-not-allowed border border-slate-200 rounded-xl text-sm" />
+                          </div>
+                        );
+                      }
+
+                      if (isCampusField) {
+                        return (
+                          <div key={idx} className={isLong?'sm:col-span-2':''}>
+                            <label className="block text-sm font-medium text-slate-600 mb-1.5">{cLabel}</label>
+                            <select 
+                              value={formData[field] || ''} 
+                              onChange={(e) => {
+                                const newCampus = e.target.value;
+                                const updates = { [field]: newCampus };
+                                currentGroup.fields.forEach(f => {
+                                  const fClean = cleanLabel(f);
+                                  if ((fClean.includes('คณะ') || fClean.startsWith('สาขา')) && !f.includes('ปริญญา')) updates[f] = '';
+                                });
+                                setFormData({...formData, ...updates});
+                              }}
+                              className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-sm appearance-none"
+                            >
+                              <option value="">-- เลือกวิทยาเขต --</option>
+                              {CAMPUS_OPTIONS.map(c => <option key={c} value={c}>{c}</option>)}
+                            </select>
+                          </div>
+                        );
+                      }
+
+                      if (isFacultyRelated) {
+                        const selectedCampus = getSelectedCampus();
+                        const isSpecificCampusField = CAMPUS_OPTIONS.some(c => cLabel.includes(c));
+                        let options = [];
+                        if (selectedCampus) options = FACULTY_BY_CAMPUS[selectedCampus] || [];
+
+                        return (
+                          <div key={idx} className={isLong?'sm:col-span-2':''}>
+                            <label className="block text-sm font-medium text-slate-600 mb-1.5">{cLabel}</label>
+                            <select 
+                              value={formData[field] || ''} 
+                              onChange={(e) => setFormData({...formData, [field]: e.target.value})}
+                              disabled={!selectedCampus && !isSpecificCampusField}
+                              className={`w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-sm appearance-none ${!selectedCampus && !isSpecificCampusField ? 'bg-slate-50 text-slate-400 cursor-not-allowed' : 'bg-white'}`}
+                            >
+                              <option value="">{(selectedCampus || isSpecificCampusField) ? '-- เลือกคณะ/สี --' : 'กรุณาเลือกวิทยาเขตก่อน'}</option>
+                              {options.map(o => <option key={o} value={o}>{o}</option>)}
+                            </select>
+                          </div>
+                        );
+                      }
+
+                      if (isDegreeField) {
+                        return (
+                          <div key={idx} className="sm:col-span-2 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                            <label className="block text-sm font-bold text-slate-700 mb-3">ระดับปริญญา (ตรี / โท / เอก)</label>
+                            
+                            <div className="grid grid-cols-3 gap-3 mb-3">
+                              {['ตรี', 'โท', 'เอก'].map(level => (
+                                <label key={level} className={`flex items-center justify-center gap-2 p-3 rounded-xl border cursor-pointer transition-all ${formData[field] === level ? `border-${themeClasses.badge === 'primary' ? 'blue' : 'emerald'}-500 bg-white shadow-sm ring-1 ring-${themeClasses.badge === 'primary' ? 'blue' : 'emerald'}-500` : 'border-slate-200 hover:border-slate-300 bg-white'}`}>
+                                  <input type="radio" name={field} value={level} checked={formData[field] === level} onChange={(e)=>setFormData({...formData, [field]: e.target.value, 'รูปแบบการสั่งจอง': ''})} className="hidden"/>
+                                  <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-colors ${formData[field] === level ? `border-${themeClasses.badge === 'primary' ? 'blue' : 'emerald'}-500` : 'border-slate-300'}`}>
+                                    {formData[field] === level && <div className={`w-2 h-2 bg-${themeClasses.badge === 'primary' ? 'blue' : 'emerald'}-500 rounded-full animate-fade-in`}></div>}
+                                  </div>
+                                  <span className={`text-sm font-semibold ${formData[field] === level ? `text-${themeClasses.badge === 'primary' ? 'blue' : 'emerald'}-700` : 'text-slate-600'}`}>{level}</span>
+                                </label>
+                              ))}
+                            </div>
+
+                            <div className="text-[11.5px] text-amber-700 bg-amber-100/50 p-3.5 rounded-xl border border-amber-200/60 leading-relaxed">
+                              <span className="font-bold">⚠️ คำแนะนำ:</span> คณะแพทย์, คณะเภสัช, และคณะทันตแพทย์ ใส่ครุยปริญญาโท เลือก <span className="font-bold underline">"โท"</span> นะคะ<br/>
+                              ยกเว้น <span className="font-bold text-amber-800">*คณะแพทย์ สาขารังสี และกายภาพบำบัด</span> ใส่ครุยปริญญาตรี เลือก <span className="font-bold underline">"ตรี"</span> ค่ะ
+                            </div>
+
+                            {activeTab !== 'moh' && formData[field] && PACKAGE_OPTIONS[formData[field]] && (
+                              <div className="mt-4 animate-fade-in border-t border-slate-200 pt-4">
+                                <label className="block text-sm font-bold text-slate-700 mb-2">รูปแบบการสั่งจอง (ปริญญา{formData[field]})</label>
+                                <select 
+                                  value={formData['รูปแบบการสั่งจอง'] || ''} 
+                                  onChange={(e) => setFormData({...formData, 'รูปแบบการสั่งจอง': e.target.value})}
+                                  className="w-full px-4 py-3.5 bg-white border border-slate-300 shadow-sm rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-sm appearance-none font-medium text-slate-700"
+                                >
+                                  <option value="" className="text-slate-400">-- กรุณาเลือกแพ็กเกจ --</option>
+                                  {PACKAGE_OPTIONS[formData[field]].map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                                </select>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      }
+
+                      if (isMaleOnlyOrderField) {
+                        return (
+                          <div key={idx} className="sm:col-span-2">
+                            <label className="block text-sm font-medium text-slate-600 mb-1.5">สำหรับบัณฑิตชาย เท่านั้น (บัณฑิตหญิงเลือก "ไม่สั่งจอง")</label>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-1">
+                              {['สั่งจอง', 'ไม่สั่งจอง'].map(opt => (
+                                <label key={opt} className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${formData[field] === opt ? 'border-indigo-500 bg-indigo-50 shadow-sm' : 'border-slate-200 hover:border-indigo-300 bg-white'}`}>
+                                  <input type="radio" name={field} value={opt} checked={formData[field] === opt} onChange={(e)=>{
+                                    const val = e.target.value;
+                                    const updates = { [field]: val };
+                                    if(val === 'ไม่สั่งจอง') {
+                                      Object.keys(formData).forEach(k => {
+                                        const kc = cleanLabel(k);
+                                        if (kc.includes('สั่งจองชุดด้านใน') || kc === 'เสื้อราชปะแตนพร้อมเครื่องหมาย' || kc === 'ชุดว่าที่ร้อยตรี' || kc === 'ชุดข้าราชการ' || /ไหล่กว้าง|แขนยาว|รอบอก|รอบคอ|เสื้อยาว|รอบเอว|สะโพก|เป้า|ต้นขา|กางเกงยาว/.test(kc)) {
+                                          updates[k] = '';
+                                        }
+                                      });
+                                    }
+                                    setFormData({...formData, ...updates});
+                                  }} className="hidden"/>
+                                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${formData[field] === opt ? 'border-indigo-500' : 'border-slate-300'}`}>
+                                    {formData[field] === opt && <div className="w-2.5 h-2.5 bg-indigo-500 rounded-full animate-fade-in"></div>}
+                                  </div>
+                                  <span className={`text-sm font-semibold ${formData[field] === opt ? 'text-indigo-700' : 'text-slate-600'}`}>{opt}</span>
+                                </label>
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      }
+
+                      if (isInnerSuitOrderField) {
+                        const innerSuitOptions = ['สั่งจองเสื้อราชปะแตนพร้อมเครื่องหมาย', 'สั่งจองชุดว่าที่ร้อยตรี', 'สั่งจองชุดข้าราชการ'];
+                        return (
+                          <div key={idx} className="sm:col-span-2 animate-fade-in">
+                            <label className="block text-sm font-medium text-slate-600 mb-1.5">สั่งจองชุดด้านใน (บัณฑิตชาย)</label>
+                            <div className="grid grid-cols-1 gap-3 mt-1">
+                              {innerSuitOptions.map(opt => (
+                                <label key={opt} className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${formData[field] === opt ? 'border-amber-500 bg-amber-50 shadow-sm' : 'border-slate-200 hover:border-amber-300 bg-white'}`}>
+                                  <input type="radio" name={field} value={opt} checked={formData[field] === opt} onChange={(e)=>{
+                                    const val = e.target.value;
+                                    const updates = { [field]: val };
+                                    
+                                    Object.keys(formData).forEach(k => {
+                                      const kc = cleanLabel(k);
+                                      if (kc === 'เสื้อราชปะแตนพร้อมเครื่องหมาย' || kc === 'ชุดว่าที่ร้อยตรี' || kc === 'ชุดข้าราชการ') updates[k] = '';
+                                      if (val !== 'สั่งจองเสื้อราชปะแตนพร้อมเครื่องหมาย' && kc.includes('เสื้อราชปะแตน') && /ไหล่กว้าง|แขนยาว|รอบอก|รอบคอ|เสื้อยาว|รอบเอว|สะโพก/.test(kc)) updates[k] = '';
+                                      if ((val !== 'สั่งจองชุดว่าที่ร้อยตรี' && val !== 'สั่งจองชุดข้าราชการ') && !kc.includes('เสื้อราชปะแตน') && /ไหล่กว้าง|แขนยาว|รอบอก|รอบคอ|เสื้อยาว|รอบเอว|สะโพก|เป้า|ต้นขา|กางเกงยาว/.test(kc) && !kc.includes('ครุย')) updates[k] = '';
+                                    });
+
+                                    setFormData({...formData, ...updates});
+                                  }} className="hidden"/>
+                                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${formData[field] === opt ? 'border-amber-500' : 'border-slate-300'}`}>
+                                    {formData[field] === opt && <div className="w-2.5 h-2.5 bg-amber-500 rounded-full animate-fade-in"></div>}
+                                  </div>
+                                  <span className={`text-sm font-semibold ${formData[field] === opt ? 'text-amber-700' : 'text-slate-600'}`}>{opt}</span>
+                                </label>
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      }
+
+                      if (isSubOptionRajpattern || isSubOptionSubLieutenant || isSubOptionOfficer) {
+                         let options = [];
+                         if (isSubOptionRajpattern) options = INNER_SUIT_SUB_OPTIONS['เสื้อราชปะแตนพร้อมเครื่องหมาย'];
+                         if (isSubOptionSubLieutenant) options = INNER_SUIT_SUB_OPTIONS['ชุดว่าที่ร้อยตรี'];
+                         if (isSubOptionOfficer) options = INNER_SUIT_SUB_OPTIONS['ชุดข้าราชการ'];
+
+                         return (
+                           <div key={idx} className="sm:col-span-2 animate-fade-in bg-amber-50/50 p-4 rounded-2xl border border-amber-100">
+                             <label className="block text-sm font-bold text-slate-700 mb-2">{cLabel}</label>
+                             <select 
+                               value={formData[field] || ''} 
+                               onChange={(e) => setFormData({...formData, [field]: e.target.value})}
+                               className="w-full px-4 py-3.5 bg-white border border-slate-300 shadow-sm rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none transition-all text-sm appearance-none font-medium text-slate-700"
+                             >
+                               <option value="" className="text-slate-400">-- กรุณาเลือก --</option>
+                               {options.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                             </select>
+                           </div>
+                         );
+                      }
+
+                      if (isOrderTypeField) {
+                        return (
+                          <div key={idx} className={isLong?'sm:col-span-2':''}>
+                            <label className="block text-sm font-medium text-slate-600 mb-1.5">{cLabel}</label>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-1">
+                              <label className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${formData[field] === 'ครุย' ? 'border-emerald-500 bg-emerald-50 shadow-sm' : 'border-slate-200 hover:border-emerald-300 bg-white'}`}>
+                                <input type="radio" name={field} value="ครุย" checked={formData[field] === 'ครุย'} onChange={(e)=>setFormData({...formData, [field]: e.target.value})} className="hidden"/>
+                                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${formData[field] === 'ครุย' ? 'border-emerald-500' : 'border-slate-300'}`}>
+                                  {formData[field] === 'ครุย' && <div className="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-fade-in"></div>}
+                                </div>
+                                <span className={`text-sm font-semibold ${formData[field] === 'ครุย' ? 'text-emerald-700' : 'text-slate-600'}`}>ครุย (สั่งจอง)</span>
+                              </label>
+
+                              <label className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${formData[field] === 'ไม่สั่งจองครุย' ? 'border-red-500 bg-red-50 shadow-sm' : 'border-slate-200 hover:border-red-300 bg-white'}`}>
+                                <input type="radio" name={field} value="ไม่สั่งจองครุย" checked={formData[field] === 'ไม่สั่งจองครุย'} onChange={(e)=>setFormData({...formData, [field]: e.target.value})} className="hidden"/>
+                                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${formData[field] === 'ไม่สั่งจองครุย' ? 'border-red-500' : 'border-slate-300'}`}>
+                                  {formData[field] === 'ไม่สั่งจองครุย' && <div className="w-2.5 h-2.5 bg-red-500 rounded-full animate-fade-in"></div>}
+                                </div>
+                                <span className={`text-sm font-semibold ${formData[field] === 'ไม่สั่งจองครุย' ? 'text-red-700' : 'text-slate-600'}`}>ไม่สั่งจองครุย</span>
+                              </label>
+                            </div>
+                          </div>
+                        );
+                      }
+
+                      if (isYesNoField) {
+                        const currentValue = ['มี', 'รับ'].includes(formData[field]) ? 'รับ' : (['ไม่มี', 'ไม่รับ'].includes(formData[field]) ? 'ไม่รับ' : formData[field]);
+                        return (
+                          <div key={idx} className={isLong?'sm:col-span-2':''}>
+                            <label className="block text-sm font-medium text-slate-600 mb-1.5">{cLabel}</label>
+                            <div className="grid grid-cols-2 gap-3 mt-1">
+                              {['รับ', 'ไม่รับ'].map(opt => (
+                                <label key={opt} className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${currentValue === opt ? `border-${themeClasses.badge === 'primary' ? 'blue' : 'emerald'}-500 bg-${themeClasses.badge === 'primary' ? 'blue' : 'emerald'}-50 shadow-sm` : 'border-slate-200 hover:border-slate-300 bg-white'}`}>
+                                  <input type="radio" name={field} value={opt} checked={currentValue === opt} onChange={(e)=>setFormData({...formData, [field]: e.target.value})} className="hidden"/>
+                                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${currentValue === opt ? `border-${themeClasses.badge === 'primary' ? 'blue' : 'emerald'}-500` : 'border-slate-300'}`}>
+                                    {currentValue === opt && <div className={`w-2.5 h-2.5 bg-${themeClasses.badge === 'primary' ? 'blue' : 'emerald'}-500 rounded-full animate-fade-in`}></div>}
+                                  </div>
+                                  <span className={`text-sm font-semibold ${currentValue === opt ? `text-${themeClasses.badge === 'primary' ? 'blue' : 'emerald'}-700` : 'text-slate-600'}`}>{opt}</span>
+                                </label>
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      }
+
+                      if (isSuitServiceType) {
+                        return (
+                          <div key={idx} className="sm:col-span-2 animate-fade-in">
+                            <label className="block text-sm font-medium text-slate-600 mb-1.5">{cLabel}</label>
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-1">
+                              {['ตัดซื้อ', 'ตัดเช่า', 'เช่า'].map(opt => (
+                                <label key={opt} className={`flex items-center justify-center gap-2 p-3 rounded-xl border cursor-pointer transition-all ${formData[field] === opt ? 'border-indigo-500 bg-indigo-50 shadow-sm' : 'border-slate-200 hover:border-indigo-300 bg-white'}`}>
+                                  <input type="radio" name={field} value={opt} checked={formData[field] === opt} onChange={(e)=>setFormData({...formData, [field]: e.target.value})} className="hidden"/>
+                                  <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-colors ${formData[field] === opt ? 'border-indigo-500' : 'border-slate-300'}`}>
+                                    {formData[field] === opt && <div className="w-2 h-2 bg-indigo-500 rounded-full animate-fade-in"></div>}
+                                  </div>
+                                  <span className={`text-sm font-semibold ${formData[field] === opt ? 'text-indigo-700' : 'text-slate-600'}`}>{opt}</span>
+                                </label>
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <div key={idx} className={isLong?'sm:col-span-2':''}>
+                          <label className="block text-sm font-medium text-slate-600 mb-1.5">{cLabel}</label>
+                          {isLong ? (
+                            <textarea value={formData[field]||''} onChange={(e)=>setFormData({...formData,[field]:e.target.value})} placeholder={`ระบุ ${cLabel.toLowerCase()}...`} rows={3} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-sm resize-y" />
+                          ) : (
+                            <input type="text" value={formData[field]||''} onChange={(e)=>setFormData({...formData,[field]:e.target.value})} placeholder={cLabel} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-sm" />
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="p-4 md:p-5 border-t border-slate-100 bg-slate-50/50 shrink-0">
+              {mode === 'upload' && (
+                <div className="flex justify-between items-center gap-3">
+                  <button onClick={() => !isEditing ? setMode('choose') : onClose()} className="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-medium text-sm hover:bg-white transition-colors shrink-0">ยกเลิก</button>
+                  <button onClick={handleSaveUpload} disabled={submitting || selectedFiles.length === 0} className={`w-full sm:w-auto px-6 py-2.5 rounded-xl font-medium text-sm flex items-center justify-center gap-2 transition-all ${submitting || selectedFiles.length === 0 ? 'bg-slate-200 text-slate-400 cursor-not-allowed' : `${themeClasses.btn} text-white shadow-md`}`}>
+                    {submitting ? <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span> กำลังบันทึก...</> : <><Icon name="check" className="w-4 h-4"/> บันทึกไฟล์</>}
+                  </button>
+                </div>
+              )}
+
+              {mode === 'manual' && (
+                <div className="flex justify-between items-center gap-3">
+                  <button onClick={() => step > 1 ? setStep(s => s - 1) : (isEditing ? onClose() : setMode('choose'))} disabled={submitting} className="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-medium text-sm hover:bg-white transition-colors shrink-0 disabled:opacity-50">
+                    {step > 1 ? '← ก่อนหน้า' : 'ยกเลิก'}
+                  </button>
+                  
+                  {step < groups.length ? (
+                    <button onClick={() => setStep(s => s + 1)} className={`w-full sm:w-auto px-6 py-2.5 rounded-xl font-medium text-sm flex items-center justify-center gap-2 text-white transition-all shadow-md ${themeClasses.btn}`}>ถัดไป <Icon name="chevron-right" className="w-4 h-4"/></button>
+                  ) : (
+                    <button onClick={handleSaveManual} disabled={submitting} className={`w-full sm:w-auto px-6 py-2.5 rounded-xl font-medium text-sm flex items-center justify-center gap-2 text-white transition-all shadow-md ${themeClasses.btn} ${submitting ? 'opacity-70 cursor-wait' : ''}`}>
+                      {submitting ? <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span> กำลังบันทึก...</> : <><Icon name="check" className="w-4 h-4"/> บันทึกข้อมูล</>}
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
 </html>
