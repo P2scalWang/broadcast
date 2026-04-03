@@ -54,14 +54,12 @@
     const { useState, useMemo, useEffect, useCallback, useRef } = React;
 
     const WEBHOOK_POST_URLS = {
-      moh: 'https://n8n.srv1038568.hstgr.cloud/webhook-test/a62e235f-0bfa-4637-a206-900c12cd018b',
-      form: 'https://n8n.srv1038568.hstgr.cloud/webhook-test/a62e235f-0bfa-4637-a206-900c12cd018b'
+      moh: 'https://n8n.srv1038568.hstgr.cloud/webhook/a62e235f-0bfa-4637-a206-900c12cd018b',
+      form: 'https://n8n.srv1038568.hstgr.cloud/webhook/a62e235f-0bfa-4637-a206-900c12cd018b'
     };
 
     const WEBHOOK_GET_URLS = {
-
       moh: 'https://n8n.srv1038568.hstgr.cloud/webhook/moh',
-
       form: 'https://n8n.srv1038568.hstgr.cloud/webhook/a62e235f-0bfa-4637-a206-900c12cd018b' 
 
     };
@@ -109,10 +107,10 @@
       'Address_District': 'ที่อยู่ อำเภอ/เขต',
       'Address_Province': 'ที่อยู่ จังหวัด',
       'Postal_Code': 'รหัสไปรษณีย์',
-      'Weight_kg': 'น้ำหนัก',
-      'Height_cm': 'ส่วนสูง',
-      'Gown_Service_Type': 'ประเภทบริการ', 
-      'Order_Degree_Gown': 'สั่งจองชุดครุย',
+      'Weight_kg': 'น้ำหนัก (กก.)',
+      'Height_cm': 'ส่วนสูง (ซม.)',
+      'Gown_Service_Type': 'ชุดครุย ประเภทบริการ', 
+      'Order_Degree_Gown': 'ระดับปริญญา',
       'Order_Garment_Bag': 'สั่ง ถุงคลุม',
       'Order_RajPattern_Suit': 'สั่ง ชุดราชปะแตน',
       'Order_Insignia': 'สั่ง เครื่องหมาย',
@@ -136,6 +134,7 @@
       'RajPattern_Waist_inch': 'รอบเอว เสื้อราชปะแตน',
       'RajPattern_Lower_Hip_inch': 'สะโพกล่าง เสื้อราชปะแตน',
       'RajPattern_Belly_Circumference_inch': 'รอบพุง เสื้อราชปะแตน',
+      'RajPattern_Hip_inch': 'สะโพก เสื้อราชปะแตน', 
       'RajPattern_Crotch_inch': 'เป้า เสื้อราชปะแตน',
       'RajPattern_Thigh_inch': 'ต้นขา เสื้อราชปะแตน',
       'RajPattern_Pants_Skirt_Length_inch': 'กางเกงยาว เสื้อราชปะแตน',
@@ -153,16 +152,16 @@
       'SuratThani_Faculty_Color': 'วิทยาเขตสุราษฎร์ คณะ / สี',
       'Trang_Faculty_Color': 'วิทยาเขตตรัง คณะ / สี',
       'Phuket_Faculty_Color': 'วิทยาเขตภูเก็ต คณะ / สี',
-      'Order_Type': 'สั่งจอง',
+      'Order_Type': 'สั่งจอง (ครุย)',
       'Degree_Level': 'ระดับปริญญา',
       'Male_Inner_Suit_Choice': 'สำหรับบัณฑิตชาย เท่านั้น',
-      'Bachelor_Degree_Details': 'ปริญญาตรี',
-      'Master_Degree_Details': 'ปริญญาโท',
-      'Doctoral_Degree_Details': 'ปริญญาเอก',
+      'Bachelor_Degree_Details': 'แพ็กเกจ (ปริญญาตรี)',
+      'Master_Degree_Details': 'แพ็กเกจ (ปริญญาโท)',
+      'Doctoral_Degree_Details': 'แพ็กเกจ (ปริญญาเอก)',
       'Order_Inner_Suit_Male': 'สั่งจองชุดด้านใน',
-      'RajPattern_Shirt_With_Insignia': 'เสื้อราชปะแตนพร้อมเครื่องหมาย',
-      'Acting_Sub_Lieutenant_Suit': 'ชุดว่าที่ร้อยตรี',
-      'Civil_Servant_Suit': 'ชุดข้าราชการ',
+      'RajPattern_Shirt_With_Insignia': 'แพ็กเกจเสื้อราชปะแตน',
+      'Acting_Sub_Lieutenant_Suit': 'แพ็กเกจชุดว่าที่ร้อยตรี',
+      'Civil_Servant_Suit': 'แพ็กเกจชุดข้าราชการ',
       'General_Shoulder_Width_inch': 'ไหล่กว้างทั่วไป',
       'General_Sleeve_Length_inch': 'แขนยาวทั่วไป',
       'General_Chest_inch': 'รอบอกทั่วไป',
@@ -179,9 +178,31 @@
       'Total_Inner_Suits': 'รวมชุดด้านใน',
       'Booking_Details': 'รายละเอียดสั่งจอง',
       'PDF_URL': 'PDF URL',
-      'Error_Alert': 'Error Alert',
-      'Status_Mail': 'Status mail',
-      'Send_Mail': 'Send mail'
+      'RowInSheet': 'เลขบรรทัด (ID)'
+    };
+
+    const getStaticFieldGroups = (activeTab) => {
+      if (activeTab === 'moh') {
+        return [
+          { id: 'personal', title: 'ข้อมูลส่วนตัว', icon: 'user', fields: ['Booking_Order_Number', 'Title', 'First_Name', 'Last_Name', 'Phone_Number', 'Email', 'Institution', 'Faculty', 'Major', 'Faculty_Color', 'Weight_kg', 'Height_cm'] },
+          { id: 'address', title: 'ที่อยู่จัดส่ง', icon: 'map-pin', fields: ['Address_House_No', 'Address_Village', 'Address_Moo', 'Address_Soi', 'Address_Street', 'Address_Sub_District', 'Address_District', 'Address_Province', 'Postal_Code'] },
+          { id: 'requirements', title: 'ความต้องการ', icon: 'list', fields: ['Order_Degree_Gown', 'Gown_Service_Type', 'Order_Garment_Bag', 'Order_RajPattern_Suit', 'Order_Insignia', 'Order_Navy_Blue_Suit', 'Order_White_Suit', 'Order_Student_Uniform', 'RajPattern_Suit_Service_Type'] },
+          { id: 'gown-size', title: 'ขนาดชุดครุย', icon: 'shirt', fields: ['Gown_Shoulder_Width_inch', 'Gown_Sleeve_Length_inch', 'Gown_Length_inch', 'Gown_Chest_inch', 'Gown_Head_Circumference_inch'] },
+          { id: 'formal-size', title: 'ขนาดชุดด้านใน', icon: 'tie', fields: ['RajPattern_Shoulder_Width_inch', 'RajPattern_Neck_Circumference_inch', 'RajPattern_Front_Shoulder_inch', 'RajPattern_Back_Shoulder_inch', 'RajPattern_Chest_inch', 'RajPattern_Sleeve_Length_inch', 'RajPattern_Shirt_Length_inch', 'RajPattern_Upper_Hip_inch', 'RajPattern_Waist_inch', 'RajPattern_Lower_Hip_inch', 'RajPattern_Belly_Circumference_inch', 'RajPattern_Crotch_inch', 'RajPattern_Thigh_inch', 'RajPattern_Pants_Skirt_Length_inch'] },
+          { id: 'payment', title: 'การชำระเงิน', icon: 'credit-card', fields: ['Gown_Price', 'Gown_Deposit', 'Gown_Balance', 'RajPattern_Price', 'RajPattern_Deposit', 'RajPattern_Balance'] },
+          { id: 'system', title: 'ข้อมูลระบบ', icon: 'clock', fields: ['Timestamp', 'Booking_Date', 'RowInSheet'], system: true }
+        ];
+      }
+      return [
+        { id: 'personal', title: 'ข้อมูลส่วนตัว', icon: 'user', fields: ['Suit_Number', 'Title', 'First_Name', 'Last_Name', 'Student_ID', 'Phone_Number', 'Email', 'Height_cm', 'Weight_kg'] },
+        { id: 'address', title: 'ที่อยู่จัดส่ง', icon: 'map-pin', fields: ['Address'] },
+        { id: 'campus', title: 'วิทยาเขต / คณะ', icon: 'building', fields: ['Campus', 'HatYai_Faculty_Color', 'Pattani_Faculty_Color', 'SuratThani_Faculty_Color', 'Trang_Faculty_Color', 'Phuket_Faculty_Color'] },
+        { id: 'order', title: 'การสั่งจอง', icon: 'cart', fields: ['Order_Type', 'Degree_Level', 'Male_Inner_Suit_Choice', 'Order_Inner_Suit_Male', 'RajPattern_Shirt_With_Insignia', 'Acting_Sub_Lieutenant_Suit', 'Civil_Servant_Suit'] },
+        { id: 'gown-size', title: 'ขนาดชุดครุย', icon: 'ruler', fields: ['Gown_Shoulder_Width_inch', 'Gown_Sleeve_Length_inch', 'Gown_Length_inch', 'Gown_Chest_inch', 'Gown_Head_Circumference_inch'] },
+        { id: 'formal-size', title: 'ขนาดชุดด้านใน', icon: 'ruler', fields: ['RajPattern_Shoulder_Width_inch', 'RajPattern_Sleeve_Length_inch', 'RajPattern_Chest_inch', 'RajPattern_Neck_Circumference_inch', 'RajPattern_Shirt_Length_inch', 'RajPattern_Waist_inch', 'RajPattern_Hip_inch', 'General_Shoulder_Width_inch', 'General_Sleeve_Length_inch', 'General_Chest_inch', 'General_Neck_Circumference_inch', 'General_Shirt_Length_inch', 'General_Waist_inch', 'General_Hip_inch', 'Crotch_Length_inch', 'Thigh_Circumference_inch', 'Pants_Length_inch'] },
+        { id: 'payment', title: 'การชำระเงิน', icon: 'credit-card', fields: ['Total_Transfer_Amount'] },
+        { id: 'system', title: 'ข้อมูลระบบ', icon: 'clock', fields: ['Timestamp', 'Total_Inner_Suits', 'Booking_Date', 'Booking_Details', 'PDF_URL', 'RowInSheet'], system: true }
+      ];
     };
 
     const getCurrentTimestamp = () => {
@@ -189,12 +210,10 @@
       return `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()}, ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
     };
 
-    // ตัวแปลงและจัดระเบียบเวลาแบบใหม่ ให้ปลอดภัยและโชว์ตรงกันเสมอ (ทนทานต่อข้อมูลที่ผิดรูปแบบ)
     const formatDateTime = (ts) => {
       if (!ts || ts === 'null' || ts === 'undefined' || ts === '') return '-';
       let str = String(ts).replace(/^\[DateTime:\s*/, '').replace(/\]$/, '').trim();
       
-      // กรณี ISO 8601 (มีตัว T และลงท้ายด้วย Z) จาก Database
       if (str.includes('T') && str.endsWith('Z')) {
          const d = new Date(str);
          if (!isNaN(d.getTime())) {
@@ -202,7 +221,6 @@
          }
       }
       
-      // กรณีมาจาก Sheet เป็นข้อความเช่น "3/4/2026, 3:28:53"
       const dateMatch = str.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
       const timeMatch = str.match(/(\d{1,2}):(\d{1,2})(?::(\d{1,2}))?/);
 
@@ -220,113 +238,44 @@
       return str;
     };
 
-    // ลอจิกตรวจสอบรายการใหม่ แก้ปัญหาเวลาติดบัคจากเบราว์เซอร์
     const isNew = (ts) => {
       if (!ts) return false;
       try {
         let raw = String(ts).replace(/^\[DateTime:\s*/, '').replace(/\]$/, '').trim();
         const now = Date.now();
-        const threshold = 5 * 60 * 60 * 1000; 
+        const threshold = 48 * 60 * 60 * 1000; 
 
-        if (raw.includes('T') && raw.endsWith('Z')) {
-            const d = new Date(raw);
-            const diff = now - d.getTime();
-            return diff >= -86400000 && diff < threshold;
-        }
-
-        const dateMatch = raw.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
-        const timeMatch = raw.match(/(\d{1,2}):(\d{1,2})(?::(\d{1,2}))?/);
-
-        if (dateMatch) {
-            const p1 = parseInt(dateMatch[1], 10);
-            const p2 = parseInt(dateMatch[2], 10);
-            const year = parseInt(dateMatch[3], 10);
-            
-            let hh = 0, mm = 0, ss = 0;
-            if (timeMatch) {
-                hh = parseInt(timeMatch[1], 10);
-                mm = parseInt(timeMatch[2], 10);
-                ss = timeMatch[3] ? parseInt(timeMatch[3], 10) : 0;
-            }
-
-            // ลองเทียบทั้ง 2 รูปแบบ (ไทย และ US)
-            const d1 = new Date(year, p2 - 1, p1, hh, mm, ss); // ถอดความแบบ DD/MM/YYYY
-            const d2 = new Date(year, p1 - 1, p2, hh, mm, ss); // ถอดความแบบ MM/DD/YYYY
-
-            const diff1 = now - d1.getTime();
-            const diff2 = now - d2.getTime();
-
-            // ถ้ารูปแบบไหนอยู่ในช่วง 48 ชั่วโมง ให้ถือว่าเป็น New หมด
-            if (diff1 >= -86400000 && diff1 < threshold) return true;
-            if (diff2 >= -86400000 && diff2 < threshold) return true;
-            
-            return false;
-        }
-
-        const dNative = new Date(raw);
+        let dNative = new Date(raw);
         if (!isNaN(dNative.getTime())) {
             const diff = now - dNative.getTime();
             if (diff >= -86400000 && diff < threshold) return true;
         }
 
+        if (raw.includes('/')) {
+          const parts = raw.split(/[\s,T]+/); 
+          const datePart = parts.find(p => p.includes('/'));
+          const timePart = parts.find(p => p.includes(':')) || '00:00:00';
+          
+          if (datePart) {
+            const [p1, p2, p3] = datePart.split('/'); 
+            const d1 = new Date(`${p3}-${p2.padStart(2, '0')}-${p1.padStart(2, '0')}T${timePart}`);
+            const d2 = new Date(`${p3}-${p1.padStart(2, '0')}-${p2.padStart(2, '0')}T${timePart}`);
+            
+            const diff1 = isNaN(d1.getTime()) ? Infinity : now - d1.getTime();
+            const diff2 = isNaN(d2.getTime()) ? Infinity : now - d2.getTime();
+
+            if (diff1 >= -86400000 && diff1 < threshold) return true;
+            if (diff2 >= -86400000 && diff2 < threshold) return true;
+          }
+        }
         return false;
       } catch { return false; }
     };
 
-    const cleanLabel = (t) => {
-      let rawLabel = String(t || '').trim();
-      let label = THAI_MAP[rawLabel] || rawLabel;
-      label = label.replace(/_/g, ' ').replace(/\s+/g, ' ').trim();
-      
-      if (label.startsWith('ที่อยู่ ')) {
-        const subLabel = label.replace('ที่อยู่ ', '');
-        const replacements = { 'เลขที่': 'เลขที่', 'ซอย': 'ซอย', 'ถนน': 'ถนน', 'ตำบล': 'ตำบล/แขวง', 'แขวง': 'ตำบล/แขวง', 'อำเภอ': 'อำเภอ/เขต', 'เขต': 'อำเภอ/เขต', 'จังหวัด': 'จังหวัด', 'รายละเอียด': 'รายละเอียดเพิ่มเติม', 'หมู่บ้าน': 'หมู่บ้าน', 'หมู่': 'หมู่' };
-        return replacements[subLabel] || subLabel;
-      }
-      return label;
-    };
-    
+    const cleanLabel = (key) => THAI_MAP[key] || key.replace(/_/g, ' ');
     const isEmpty = (v) => !v || v === '' || v === '-' || v === '----' || v === 'null' || v === 'undefined';
     
-    const getFaculty = (o) => { 
-      if (!o) return '-'; 
-      for (const k of Object.keys(o)) { 
-        const c = cleanLabel(k);
-        if (c.includes('คณะ') && o[k] && o[k] !== '-' && o[k] !== '') return o[k]; 
-      } 
-      return o['Faculty'] || o['คณะ'] || o['Major'] || o['สาขา'] || '-'; 
-    };
-
-    const buildFieldGroups = (headers, type) => {
-      if (!headers?.length) return [];
-      
-      const pick = (test) => headers.filter(h => {
-        const c = cleanLabel(h);
-        return (test(c, h)) && !c.includes('Upload สลิปโอนเงิน') && !['ปริญญาตรี', 'ปริญญาโท', 'ปริญญาเอก'].includes(c) && !['id'].includes(c);
-      });
-      
-      if (type === 'moh') {
-        return [
-          { id:'personal', title:'ข้อมูลส่วนตัว', icon:'user', fields: pick((c, h) => ['คำนำหน้า','ชื่อ','นามสกุล','เบอร์โทรศัพท์','เบอร์มือถือ','อีเมล','สถาบัน','วิทยาเขต','คณะ','สาขา','สีประจำคณะ'].includes(c) || /น้ำหนัก|ส่วนสูง|อายุ/.test(c)) },
-          { id:'address', title:'ที่อยู่จัดส่ง', icon:'map-pin', fields: pick((c, h) => c.startsWith('ที่อยู่') || h.startsWith('Address') || c === 'รหัสไปรษณีย์' || c === 'จังหวัด') },
-          { id:'requirements', title:'ความต้องการ', icon:'list', fields: pick((c, h) => c.startsWith('สั่ง') || h.startsWith('Order') || c.includes('ประเภทบริการ') || c.includes('หมายเหตุ') || c === 'รูปแบบการสั่งจอง') },
-          { id:'gown', title:'ชุดครุย', icon:'shirt', fields: pick((c, h) => c.includes('ครุย') || h.includes('Gown_')) },
-          { id:'formal', title:'ชุดด้านใน / ขนาด', icon:'tie', fields: pick((c, h) => c.startsWith('ราชปะแตน') || c.startsWith('สูท') || c.includes('ชุดว่าที่ร้อยตรี') || c.includes('ชุดข้าราชการ') || /ไหล่กว้าง|แขนยาว|รอบอก|รอบคอ|เสื้อยาว|รอบเอว|สะโพก|เป้า|ต้นขา|กางเกงยาว/.test(c) || h.includes('RajPattern') || h.includes('General')) },
-          { id:'system', title:'ข้อมูลระบบ', icon:'clock', fields: pick((c, h) => ['ประทับเวลา','TimeStamp','Timestamp','เลขที่ใบสั่งจอง','วันที่สั่งจอง','วันที่สร้าง','Row_Number','RowInSheet','Booking_Order_Number'].includes(h) || ['ประทับเวลา'].includes(c)), system: true }
-        ].filter(g => g.fields.length > 0);
-      }
-      return [
-        { id:'personal', title:'ข้อมูลส่วนตัว', icon:'user', fields: pick((c, h) => ['คำนำหน้า','ชื่อ','นามสกุล','รหัสนักศึกษา','เบอร์มือถือ'].includes(c) || /อีเมล|ส่วนสูง|น้ำหนัก|อายุ/.test(c)) },
-        { id:'address', title:'ที่อยู่จัดส่ง', icon:'map-pin', fields: pick((c, h) => c.includes('ที่อยู่') || h.startsWith('Address') || c === 'รหัสไปรษณีย์' || c === 'จังหวัด') },
-        { id:'campus', title:'วิทยาเขต / คณะ', icon:'building', fields: pick((c, h) => c === 'วิทยาเขต' || (c.includes('วิทยาเขต') && c.includes('คณะ')) || c === 'คณะ') },
-        { id:'order', title:'การสั่งจอง', icon:'cart', fields: pick((c, h) => /สั่งจอง|ปริญญา|บัณฑิต|ราชปะแตน.*เครื่องหมาย|ว่าที่|ข้าราชการ|รูปแบบการสั่งจอง/.test(c) || h.includes('Order_') || h.includes('Degree_')) },
-        { id:'gown-size', title:'ขนาดชุดครุย', icon:'ruler', fields: pick((c, h) => c.includes('ชุดครุย') && /(นิ้ว|ไหล่|แขน|เสื้อ|รอบ|อก|เอว)/.test(c)) },
-        { id:'formal-size', title:'ขนาดชุดด้านใน', icon:'ruler', fields: pick((c, h) => (c.includes('เสื้อราชปะแตน') || /ไหล่กว้าง|แขนยาว|รอบอก|รอบคอ|เสื้อยาว|รอบเอว|สะโพก|เป้า|ต้นขา|กางเกงยาว/.test(c)) && !/เครื่องหมาย|สั่งจอง|ชุดครุย/.test(c)) },
-        { id:'payment', title:'การชำระเงิน', icon:'credit-card', fields: pick((c, h) => /ยอดโอน|สลิป|Upload|ชำระเงิน|ธนาคาร/.test(c)) },
-        { id:'system', title:'ข้อมูลระบบ', icon:'clock', fields: pick((c, h) => /เลขที่ชุด|วันที่จอง|รวมชุด|รายละเอียด|PDF|Status|Send|Error|ประทับเวลา|Row_Number|RowInSheet|Suit_Number/.test(c) || h === 'Timestamp'), system: true },
-        { id:'checklist', title:'✅ รายการตรวจสอบ', icon:'check-circle', fields: pick((c, h) => c.startsWith('ck_') || c.startsWith('check_')) }
-      ].filter(g => g.fields.length > 0);
-    };
+    const getFaculty = (o) => o['Faculty'] || o['คณะ'] || o['Major'] || o['สาขา'] || '-'; 
 
     const Badge = ({ children, variant='default', className='' }) => {
       const variants = { default: 'bg-slate-100 text-slate-600', primary: 'bg-blue-100 text-blue-700', success: 'bg-emerald-100 text-emerald-700', warning: 'bg-amber-100 text-amber-700', danger: 'bg-red-100 text-red-700', new: 'bg-red-500 text-white badge-new' };
@@ -389,8 +338,6 @@
       const [toast, setToast] = useState(null);
       const [mohData, setMohData] = useState([]);
       const [formData, setFormData] = useState([]);
-      const [mohGroups, setMohGroups] = useState([]);
-      const [formGroups, setFormGroups] = useState([]);
       
       const [isAdding, setIsAdding] = useState(false);
       const [editingOrder, setEditingOrder] = useState(null);
@@ -403,25 +350,17 @@
 
         const fetchJSON = async (url) => {
           try {
-            const res = await fetch(url + `?nocache=${ts}`, {
-                method: 'GET',
-                headers: { 'Accept': 'application/json' }
-            });
-            if (!res.ok) throw new Error('Network response was not ok');
+            const res = await fetch(url + `?nocache=${ts}`, { headers: { 'Accept': 'application/json' } });
+            if (!res.ok) throw new Error('Network error');
             const json = await res.json();
-            
             let dataArray = Array.isArray(json) ? json : (json.data || [json]);
             
             return dataArray.map((item, idx) => {
                 const cleanItem = {};
-                Object.keys(item).forEach(k => {
-                    cleanItem[k] = item[k] === null || item[k] === undefined ? '' : String(item[k]);
-                });
-                
+                Object.keys(item).forEach(k => cleanItem[k] = item[k] === null || item[k] === undefined ? '' : String(item[k]));
                 cleanItem['Row_Number'] = cleanItem['id'] || cleanItem['RowInSheet'] || String(idx);
                 return cleanItem;
             }).reverse(); 
-
           } catch (e) {
             console.error(e);
             return [];
@@ -433,13 +372,8 @@
             fetchJSON(WEBHOOK_GET_URLS.moh),
             fetchJSON(WEBHOOK_GET_URLS.form)
           ]);
-
           setMohData(mohParsed);
-          if (mohParsed[0]) setMohGroups(buildFieldGroups(Object.keys(mohParsed[0]), 'moh'));
-          
           setFormData(formParsed);
-          if (formParsed[0]) setFormGroups(buildFieldGroups(Object.keys(formParsed[0]), 'form'));
-
         } catch (err) {
           setToast({ message: `โหลดข้อมูลไม่สำเร็จ กรุณาลองใหม่`, type: 'error' });
         } finally {
@@ -447,9 +381,7 @@
         }
       };
 
-      useEffect(() => {
-        fetchAllData();
-      }, []);
+      useEffect(() => { fetchAllData(); }, []);
 
       const handleRefresh = () => {
         setSearchQuery('');
@@ -477,7 +409,8 @@
       }, [selectedOrder, isSidebarOpen, isAdding, editingOrder]);
 
       const currentData = activeTab === 'moh' ? mohData : formData;
-      const currentGroups = activeTab === 'moh' ? mohGroups : formGroups;
+      
+      const currentGroups = useMemo(() => getStaticFieldGroups(activeTab), [activeTab]);
       
       const getTimestamp = (item) => item['Timestamp'] || item['TimeStamp'] || item['ประทับเวลา'] || item['createdAt'] || item['Booking_Date'] || item['วันที่สั่งจอง'] || '';
       
@@ -522,15 +455,10 @@
 
           if (data.action === 'upload') {
             const formDataObj = new FormData();
-            
             data.files.forEach((file, index) => {
-               if (index === 0) {
-                   formDataObj.append('file', file);
-               } else {
-                   formDataObj.append(`file_${index}`, file); 
-               }
+               if (index === 0) formDataObj.append('file', file);
+               else formDataObj.append(`file_${index}`, file); 
             });
-
             formDataObj.append('tab', data.tab);
             formDataObj.append('action', 'upload');
             if (data.Row_Number) formDataObj.append('Row_Number', data.Row_Number);
@@ -547,8 +475,6 @@
         } catch (e) { 
           console.error("Webhook Error:", e);
           setToast({ message: 'เชื่อมต่อ Webhook ไม่สำเร็จ (ดูใน Console)', type: 'error' }); 
-          setIsAdding(false); 
-          setEditingOrder(null);
         } 
       }, []);
 
@@ -622,7 +548,7 @@
                 
                 <div className="flex gap-2 mt-3">
                   <button onClick={()=>setFilters(f=>({...f,showNewOnly:!f.showNewOnly}))} className={`flex-1 px-3 py-1.5 rounded-lg text-xs font-medium border transition-all flex items-center justify-center gap-1 ${filters.showNewOnly ? (activeTab==='moh'?'bg-blue-50 border-blue-200 text-blue-700':'bg-emerald-50 border-emerald-200 text-emerald-700') :'border-slate-200 text-slate-600 hover:bg-slate-50'}`}>
-                    {filters.showNewOnly && <span className="w-1.5 h-1.5 bg-red-500 rounded-full badge-new"></span>} ใหม่ 5 ชม.
+                    {filters.showNewOnly && <span className="w-1.5 h-1.5 bg-red-500 rounded-full badge-new"></span>} ใหม่ 48ชม.
                   </button>
                 </div>
               </div>
@@ -643,13 +569,10 @@
                         </p>
                         <Badge variant={isSelected?themeClasses.badge:'default'} className="flex-shrink-0 text-[10px]">{getOrderId(order)}</Badge>
                       </div>
-                      
-                      {/* จัด Layout วันที่ชิดขวาเสมอ */}
-                      <div className="flex items-center text-xs text-slate-400 mt-1">
+                      <div className="flex items-center justify-between text-xs text-slate-400 mt-1">
                         <span className="truncate pr-2">{getFaculty(order)}</span>
-                        <span className="ml-auto flex-shrink-0 pl-2 font-medium text-slate-400 whitespace-nowrap">{formatDateTime(getTimestamp(order))}</span>
+                        <span className="flex-shrink-0 font-medium whitespace-nowrap">{formatDateTime(getTimestamp(order))}</span>
                       </div>
-                      
                     </button>
                   );
                 })}
@@ -696,6 +619,7 @@
                   <div className="space-y-4">
                     {currentGroups.map((group) => {
                       const visibleFields = group.fields.filter(f => selectedOrder[f] && !isEmpty(selectedOrder[f]));
+                      if (visibleFields.length === 0) return null;
                       
                       return (
                         <div key={group.id} className={`bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden ${group.system?'opacity-90':''}`}>
@@ -707,10 +631,11 @@
                           </div>
                           <div className="px-5 pb-5 pt-0">
                             <div className={`grid gap-3 ${group.fields.length>6?'grid-cols-2 lg:grid-cols-3':'grid-cols-2'}`}>
-                              {group.fields.map((field, idx) => { 
+                              {visibleFields.map((field, idx) => { 
                                 const value = selectedOrder[field]; 
-                                let displayValue = isEmpty(value) ? '-' : value;
-                                if (['TimeStamp', 'ประทับเวลา', 'Timestamp', 'createdAt', 'Booking_Date', 'วันที่สั่งจอง'].includes(field)) displayValue = formatDateTime(value);
+                                let displayValue = value;
+                                if (['TimeStamp', 'ประทับเวลา', 'Timestamp', 'createdAt', 'Booking_Date', 'วันที่สั่งจอง', 'RowInSheet'].includes(field)) displayValue = formatDateTime(value) || value;
+                                
                                 return (
                                   <div key={idx}>
                                     <label className="block text-[11px] font-medium text-slate-400 mb-1 uppercase tracking-wide">{cleanLabel(field)}</label>
@@ -816,20 +741,15 @@
       const progress = mode === 'manual' ? (step / Math.max(groups.length, 1)) * 100 : (mode === 'upload' ? 100 : 0);
 
       const getSelectedCampus = () => {
-        return formData['วิทยาเขต'] || formData['Campus'] || formData['Institution'] || formData['สถาบัน'] || '';
+        return formData['Campus'] || formData['Institution'] || formData['วิทยาเขต'] || formData['สถาบัน'] || '';
       };
 
       const isMaleOrdering = () => {
-        const fieldName = currentGroup?.fields.find(f => cleanLabel(f).includes('สำหรับบัณฑิตชาย เท่านั้น'));
-        if (fieldName && formData[fieldName] === 'สั่งจอง') return true;
-        return false;
+        return formData['Male_Inner_Suit_Choice'] === 'สั่งจอง' || formData['สำหรับบัณฑิตชาย เท่านั้น'] === 'สั่งจอง';
       };
 
       const getInnerSuitSelection = () => {
-        for (const key of Object.keys(formData)) {
-          if (cleanLabel(key).includes('สั่งจองชุดด้านใน')) return formData[key];
-        }
-        return null;
+        return formData['Order_Inner_Suit_Male'] || formData['สั่งจองชุดด้านใน'] || null;
       };
 
       return (
@@ -922,48 +842,58 @@
                     {currentGroup.fields.map((field, idx) => {
                       const cLabel = cleanLabel(field);
                       
-                      if (cLabel === 'รูปแบบการสั่งจอง' && activeTab === 'moh') return null;
+                      const isLong = ['Address', 'Booking_Details'].includes(field) || cLabel.length > 40;
+                      const isReadOnly = ['Timestamp', 'RowInSheet', 'Booking_Order_Number', 'Suit_Number'].includes(field);
                       
-                      const isLong = field.length > 30 || /ที่อยู่|หมายเหตุ|รายละเอียด/.test(field);
-                      const isReadOnly = ['ประทับเวลา', 'TimeStamp', 'Timestamp', 'Row_Number', 'id', 'RowInSheet'].includes(field);
+                      const isCampusField = ['Campus', 'Institution'].includes(field);
+                      const isDegreeField = ['Degree_Level', 'Order_Degree_Gown'].includes(field);
                       
-                      const isCampusField = cLabel === 'วิทยาเขต' || cLabel === 'สถาบัน';
-                      const isDegreeField = field.includes('ปริญญา') && field.length > 10;
+                      const isMaleOnlyOrderField = field === 'Male_Inner_Suit_Choice';
+                      const isInnerSuitOrderField = field === 'Order_Inner_Suit_Male';
                       
-                      const isMaleOnlyOrderField = cLabel.includes('สำหรับบัณฑิตชาย เท่านั้น') || cLabel.includes('บัณฑิตหญิงเลือก "ไม่สั่งจอง"');
-                      const isInnerSuitOrderField = cLabel.includes('สั่งจองชุดด้านใน');
+                      const isSubOptionRajpattern = field === 'RajPattern_Shirt_With_Insignia';
+                      const isSubOptionSubLieutenant = field === 'Acting_Sub_Lieutenant_Suit';
+                      const isSubOptionOfficer = field === 'Civil_Servant_Suit';
                       
-                      const isSubOptionRajpattern = cLabel === 'เสื้อราชปะแตนพร้อมเครื่องหมาย';
-                      const isSubOptionSubLieutenant = cLabel === 'ชุดว่าที่ร้อยตรี';
-                      const isSubOptionOfficer = cLabel === 'ชุดข้าราชการ';
+                      const isRajpatternSizeField = field.startsWith('RajPattern_') && !['RajPattern_Suit_Service_Type', 'RajPattern_Price', 'RajPattern_Deposit', 'RajPattern_Balance', 'RajPattern_Shirt_With_Insignia'].includes(field);
+                      const isOtherSuitSizeField = field.startsWith('General_') || ['Crotch_Length_inch', 'Thigh_Circumference_inch', 'Pants_Length_inch'].includes(field);
                       
-                      const isRajpatternSizeField = cLabel.includes('เสื้อราชปะแตน') && /ไหล่กว้าง|แขนยาว|รอบอก|รอบคอ|เสื้อยาว|รอบเอว|สะโพก/.test(cLabel);
-                      const isOtherSuitSizeField = !cLabel.includes('เสื้อราชปะแตน') && /ไหล่กว้าง|แขนยาว|รอบอก|รอบคอ|เสื้อยาว|รอบเอว|สะโพก|เป้า|ต้นขา|กางเกงยาว/.test(cLabel) && !cLabel.includes('ครุย');
+                      const isFacultyRelated = ['Faculty', 'Major', 'Faculty_Color', 'HatYai_Faculty_Color', 'Pattani_Faculty_Color', 'SuratThani_Faculty_Color', 'Trang_Faculty_Color', 'Phuket_Faculty_Color'].includes(field);
+                      const isOrderTypeField = field === 'Order_Type';
                       
-                      const isFacultyRelated = (cLabel.includes('คณะ') || cLabel.startsWith('สาขา')) && !isDegreeField && !isCampusField;
-                      const isOrderTypeField = cLabel === 'สั่งจอง' || cLabel.includes('สั่ง_ครุย') || cLabel.includes('สั่งจอง_ครุย');
+                      const isYesNoField = ['Order_Garment_Bag', 'Order_RajPattern_Suit', 'Order_Navy_Blue_Suit', 'Order_White_Suit', 'Order_Insignia', 'Order_Student_Uniform'].includes(field);
+                      const isSuitServiceType = ['RajPattern_Suit_Service_Type', 'Gown_Service_Type'].includes(field);
 
-                      const isYesNoField = ['สั่ง ถุงคลุม', 'สั่ง ชุดราชปะแตน', 'สั่ง ชุดสูทสีกรมท่า', 'สั่ง ชุดสูทสีขาว', 'สั่ง เครื่องหมาย', 'สั่ง ชุดนักศึกษา'].includes(cLabel);
-                      const isSuitServiceType = cLabel === 'ราชปะแตน/สูท ประเภทบริการ' || cLabel.includes('ประเภทบริการ');
+                      // -- ลอจิกการซ่อนฟิลด์ Form แบบแข็งแรง --
+                      if (activeTab === 'form') {
+                          if (isInnerSuitOrderField && !isMaleOrdering()) return null;
 
-                      if (isInnerSuitOrderField && !isMaleOrdering()) return null;
-
-                      const innerSuitSelection = getInnerSuitSelection();
-                      if (isSubOptionRajpattern && innerSuitSelection !== 'สั่งจองเสื้อราชปะแตนพร้อมเครื่องหมาย') return null;
-                      if (isSubOptionSubLieutenant && innerSuitSelection !== 'สั่งจองชุดว่าที่ร้อยตรี') return null;
-                      if (isSubOptionOfficer && innerSuitSelection !== 'สั่งจองชุดข้าราชการ') return null;
-                      
-                      if (isRajpatternSizeField && innerSuitSelection !== 'สั่งจองเสื้อราชปะแตนพร้อมเครื่องหมาย') return null;
-                      if (isOtherSuitSizeField && (innerSuitSelection !== 'สั่งจองชุดว่าที่ร้อยตรี' && innerSuitSelection !== 'สั่งจองชุดข้าราชการ')) return null;
-
-                      if (isFacultyRelated) {
-                         const selectedCampus = getSelectedCampus();
-                         const isSpecificCampusField = CAMPUS_OPTIONS.some(c => cLabel.includes(c));
-                         if (isSpecificCampusField) {
-                             if (!selectedCampus || !cLabel.includes(selectedCampus)) return null; 
-                         }
+                          const innerSuitSelection = getInnerSuitSelection();
+                          if (isSubOptionRajpattern && innerSuitSelection !== 'สั่งจองเสื้อราชปะแตนพร้อมเครื่องหมาย') return null;
+                          if (isSubOptionSubLieutenant && innerSuitSelection !== 'สั่งจองชุดว่าที่ร้อยตรี') return null;
+                          if (isSubOptionOfficer && innerSuitSelection !== 'สั่งจองชุดข้าราชการ') return null;
+                          
+                          if (isRajpatternSizeField && innerSuitSelection !== 'สั่งจองเสื้อราชปะแตนพร้อมเครื่องหมาย') return null;
+                          if (isOtherSuitSizeField && (innerSuitSelection !== 'สั่งจองชุดว่าที่ร้อยตรี' && innerSuitSelection !== 'สั่งจองชุดข้าราชการ')) return null;
                       }
 
+                      if (isFacultyRelated) {
+                          const selectedCampus = getSelectedCampus();
+                          
+                          if (['HatYai_Faculty_Color', 'Pattani_Faculty_Color', 'SuratThani_Faculty_Color', 'Trang_Faculty_Color', 'Phuket_Faculty_Color'].includes(field)) {
+                              if (!selectedCampus) return null;
+                              const campusMap = {
+                                  'HatYai_Faculty_Color': 'หาดใหญ่',
+                                  'Pattani_Faculty_Color': 'ปัตตานี',
+                                  'SuratThani_Faculty_Color': 'สุราษฎร์',
+                                  'Trang_Faculty_Color': 'ตรัง',
+                                  'Phuket_Faculty_Color': 'ภูเก็ต'
+                              };
+                              if (!selectedCampus.includes(campusMap[field])) return null;
+                          }
+                      }
+
+                      // เริ่ม Render
                       if (isReadOnly) {
                         return (
                           <div key={idx} className={isLong?'sm:col-span-2':''}>
@@ -981,12 +911,16 @@
                               value={formData[field] || ''} 
                               onChange={(e) => {
                                 const newCampus = e.target.value;
-                                const updates = { [field]: newCampus };
-                                currentGroup.fields.forEach(f => {
-                                  const fClean = cleanLabel(f);
-                                  if ((fClean.includes('คณะ') || fClean.startsWith('สาขา')) && !f.includes('ปริญญา')) updates[f] = '';
+                                setFormData({
+                                  ...formData, 
+                                  [field]: newCampus,
+                                  'Faculty': '',
+                                  'HatYai_Faculty_Color': '',
+                                  'Pattani_Faculty_Color': '',
+                                  'SuratThani_Faculty_Color': '',
+                                  'Trang_Faculty_Color': '',
+                                  'Phuket_Faculty_Color': ''
                                 });
-                                setFormData({...formData, ...updates});
                               }}
                               className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-sm appearance-none"
                             >
@@ -999,9 +933,15 @@
 
                       if (isFacultyRelated) {
                         const selectedCampus = getSelectedCampus();
-                        const isSpecificCampusField = CAMPUS_OPTIONS.some(c => cLabel.includes(c));
                         let options = [];
-                        if (selectedCampus) options = FACULTY_BY_CAMPUS[selectedCampus] || [];
+                        
+                        if (selectedCampus) {
+                            if (selectedCampus.includes('หาดใหญ่')) options = FACULTY_BY_CAMPUS['หาดใหญ่'];
+                            else if (selectedCampus.includes('ปัตตานี')) options = FACULTY_BY_CAMPUS['ปัตตานี'];
+                            else if (selectedCampus.includes('สุราษฎร์')) options = FACULTY_BY_CAMPUS['สุราษฎร์'];
+                            else if (selectedCampus.includes('ตรัง')) options = FACULTY_BY_CAMPUS['ตรัง'];
+                            else if (selectedCampus.includes('ภูเก็ต')) options = FACULTY_BY_CAMPUS['ภูเก็ต'];
+                        }
 
                         return (
                           <div key={idx} className={isLong?'sm:col-span-2':''}>
@@ -1009,10 +949,10 @@
                             <select 
                               value={formData[field] || ''} 
                               onChange={(e) => setFormData({...formData, [field]: e.target.value})}
-                              disabled={!selectedCampus && !isSpecificCampusField}
-                              className={`w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-sm appearance-none ${!selectedCampus && !isSpecificCampusField ? 'bg-slate-50 text-slate-400 cursor-not-allowed' : 'bg-white'}`}
+                              disabled={!selectedCampus}
+                              className={`w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-sm appearance-none ${!selectedCampus ? 'bg-slate-50 text-slate-400 cursor-not-allowed' : 'bg-white'}`}
                             >
-                              <option value="">{(selectedCampus || isSpecificCampusField) ? '-- เลือกคณะ/สี --' : 'กรุณาเลือกวิทยาเขตก่อน'}</option>
+                              <option value="">{selectedCampus ? '-- เลือกคณะ/สี --' : 'กรุณาเลือกวิทยาเขตก่อน'}</option>
                               {options.map(o => <option key={o} value={o}>{o}</option>)}
                             </select>
                           </div>
@@ -1027,7 +967,16 @@
                             <div className="grid grid-cols-3 gap-3 mb-3">
                               {['ตรี', 'โท', 'เอก'].map(level => (
                                 <label key={level} className={`flex items-center justify-center gap-2 p-3 rounded-xl border cursor-pointer transition-all ${formData[field] === level ? `border-${themeClasses.badge === 'primary' ? 'blue' : 'emerald'}-500 bg-white shadow-sm ring-1 ring-${themeClasses.badge === 'primary' ? 'blue' : 'emerald'}-500` : 'border-slate-200 hover:border-slate-300 bg-white'}`}>
-                                  <input type="radio" name={field} value={level} checked={formData[field] === level} onChange={(e)=>setFormData({...formData, [field]: e.target.value, 'รูปแบบการสั่งจอง': ''})} className="hidden"/>
+                                  <input type="radio" name={field} value={level} checked={formData[field] === level} onChange={(e) => {
+                                      const newLevel = e.target.value;
+                                      setFormData({
+                                        ...formData, 
+                                        [field]: newLevel, 
+                                        'Bachelor_Degree_Details': '',
+                                        'Master_Degree_Details': '',
+                                        'Doctoral_Degree_Details': ''
+                                      });
+                                  }} className="hidden"/>
                                   <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-colors ${formData[field] === level ? `border-${themeClasses.badge === 'primary' ? 'blue' : 'emerald'}-500` : 'border-slate-300'}`}>
                                     {formData[field] === level && <div className={`w-2 h-2 bg-${themeClasses.badge === 'primary' ? 'blue' : 'emerald'}-500 rounded-full animate-fade-in`}></div>}
                                   </div>
@@ -1041,19 +990,22 @@
                               ยกเว้น <span className="font-bold text-amber-800">*คณะแพทย์ สาขารังสี และกายภาพบำบัด</span> ใส่ครุยปริญญาตรี เลือก <span className="font-bold underline">"ตรี"</span> ค่ะ
                             </div>
 
-                            {activeTab !== 'moh' && formData[field] && PACKAGE_OPTIONS[formData[field]] && (
-                              <div className="mt-4 animate-fade-in border-t border-slate-200 pt-4">
-                                <label className="block text-sm font-bold text-slate-700 mb-2">รูปแบบการสั่งจอง (ปริญญา{formData[field]})</label>
-                                <select 
-                                  value={formData['รูปแบบการสั่งจอง'] || ''} 
-                                  onChange={(e) => setFormData({...formData, 'รูปแบบการสั่งจอง': e.target.value})}
-                                  className="w-full px-4 py-3.5 bg-white border border-slate-300 shadow-sm rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-sm appearance-none font-medium text-slate-700"
-                                >
-                                  <option value="" className="text-slate-400">-- กรุณาเลือกแพ็กเกจ --</option>
-                                  {PACKAGE_OPTIONS[formData[field]].map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                                </select>
-                              </div>
-                            )}
+                            {activeTab === 'form' && formData[field] && PACKAGE_OPTIONS[formData[field]] && (() => {
+                               const packageField = formData[field] === 'ตรี' ? 'Bachelor_Degree_Details' : formData[field] === 'โท' ? 'Master_Degree_Details' : 'Doctoral_Degree_Details';
+                               return (
+                                 <div className="mt-4 animate-fade-in border-t border-slate-200 pt-4">
+                                   <label className="block text-sm font-bold text-slate-700 mb-2">รูปแบบการสั่งจอง (ปริญญา{formData[field]})</label>
+                                   <select 
+                                     value={formData[packageField] || ''} 
+                                     onChange={(e) => setFormData({...formData, [packageField]: e.target.value})}
+                                     className="w-full px-4 py-3.5 bg-white border border-slate-300 shadow-sm rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-sm appearance-none font-medium text-slate-700"
+                                   >
+                                     <option value="" className="text-slate-400">-- กรุณาเลือกแพ็กเกจ --</option>
+                                     {PACKAGE_OPTIONS[formData[field]].map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                                   </select>
+                                 </div>
+                               );
+                            })()}
                           </div>
                         );
                       }
@@ -1069,12 +1021,10 @@
                                     const val = e.target.value;
                                     const updates = { [field]: val };
                                     if(val === 'ไม่สั่งจอง') {
-                                      Object.keys(formData).forEach(k => {
-                                        const kc = cleanLabel(k);
-                                        if (kc.includes('สั่งจองชุดด้านใน') || kc === 'เสื้อราชปะแตนพร้อมเครื่องหมาย' || kc === 'ชุดว่าที่ร้อยตรี' || kc === 'ชุดข้าราชการ' || /ไหล่กว้าง|แขนยาว|รอบอก|รอบคอ|เสื้อยาว|รอบเอว|สะโพก|เป้า|ต้นขา|กางเกงยาว/.test(kc)) {
-                                          updates[k] = '';
-                                        }
-                                      });
+                                        updates['Order_Inner_Suit_Male'] = '';
+                                        ['RajPattern_Shirt_With_Insignia', 'Acting_Sub_Lieutenant_Suit', 'Civil_Servant_Suit'].forEach(k => updates[k] = '');
+                                        ['RajPattern_Shoulder_Width_inch', 'RajPattern_Neck_Circumference_inch', 'RajPattern_Front_Shoulder_inch', 'RajPattern_Back_Shoulder_inch', 'RajPattern_Chest_inch', 'RajPattern_Sleeve_Length_inch', 'RajPattern_Shirt_Length_inch', 'RajPattern_Upper_Hip_inch', 'RajPattern_Waist_inch', 'RajPattern_Lower_Hip_inch', 'RajPattern_Belly_Circumference_inch', 'RajPattern_Crotch_inch', 'RajPattern_Thigh_inch', 'RajPattern_Pants_Skirt_Length_inch'].forEach(k => updates[k] = '');
+                                        ['General_Shoulder_Width_inch', 'General_Sleeve_Length_inch', 'General_Chest_inch', 'General_Neck_Circumference_inch', 'General_Shirt_Length_inch', 'General_Waist_inch', 'General_Hip_inch', 'Crotch_Length_inch', 'Thigh_Circumference_inch', 'Pants_Length_inch'].forEach(k => updates[k] = '');
                                     }
                                     setFormData({...formData, ...updates});
                                   }} className="hidden"/>
@@ -1101,12 +1051,13 @@
                                     const val = e.target.value;
                                     const updates = { [field]: val };
                                     
-                                    Object.keys(formData).forEach(k => {
-                                      const kc = cleanLabel(k);
-                                      if (kc === 'เสื้อราชปะแตนพร้อมเครื่องหมาย' || kc === 'ชุดว่าที่ร้อยตรี' || kc === 'ชุดข้าราชการ') updates[k] = '';
-                                      if (val !== 'สั่งจองเสื้อราชปะแตนพร้อมเครื่องหมาย' && kc.includes('เสื้อราชปะแตน') && /ไหล่กว้าง|แขนยาว|รอบอก|รอบคอ|เสื้อยาว|รอบเอว|สะโพก/.test(kc)) updates[k] = '';
-                                      if ((val !== 'สั่งจองชุดว่าที่ร้อยตรี' && val !== 'สั่งจองชุดข้าราชการ') && !kc.includes('เสื้อราชปะแตน') && /ไหล่กว้าง|แขนยาว|รอบอก|รอบคอ|เสื้อยาว|รอบเอว|สะโพก|เป้า|ต้นขา|กางเกงยาว/.test(kc) && !kc.includes('ครุย')) updates[k] = '';
-                                    });
+                                    ['RajPattern_Shirt_With_Insignia', 'Acting_Sub_Lieutenant_Suit', 'Civil_Servant_Suit'].forEach(k => updates[k] = '');
+                                    if (val !== 'สั่งจองเสื้อราชปะแตนพร้อมเครื่องหมาย') {
+                                        ['RajPattern_Shoulder_Width_inch', 'RajPattern_Neck_Circumference_inch', 'RajPattern_Front_Shoulder_inch', 'RajPattern_Back_Shoulder_inch', 'RajPattern_Chest_inch', 'RajPattern_Sleeve_Length_inch', 'RajPattern_Shirt_Length_inch', 'RajPattern_Upper_Hip_inch', 'RajPattern_Waist_inch', 'RajPattern_Lower_Hip_inch', 'RajPattern_Belly_Circumference_inch', 'RajPattern_Crotch_inch', 'RajPattern_Thigh_inch', 'RajPattern_Pants_Skirt_Length_inch'].forEach(k => updates[k] = '');
+                                    }
+                                    if (val !== 'สั่งจองชุดว่าที่ร้อยตรี' && val !== 'สั่งจองชุดข้าราชการ') {
+                                        ['General_Shoulder_Width_inch', 'General_Sleeve_Length_inch', 'General_Chest_inch', 'General_Neck_Circumference_inch', 'General_Shirt_Length_inch', 'General_Waist_inch', 'General_Hip_inch', 'Crotch_Length_inch', 'Thigh_Circumference_inch', 'Pants_Length_inch'].forEach(k => updates[k] = '');
+                                    }
 
                                     setFormData({...formData, ...updates});
                                   }} className="hidden"/>
@@ -1168,6 +1119,7 @@
                       }
 
                       if (isYesNoField) {
+                        // ปรับให้รองรับข้อมูลทั้งที่ตอบ "มี/ไม่มี" จาก Sheet เก่าด้วย เผื่อกรณีใช้ข้อมูลเดิม
                         const currentValue = ['มี', 'รับ'].includes(formData[field]) ? 'รับ' : (['ไม่มี', 'ไม่รับ'].includes(formData[field]) ? 'ไม่รับ' : formData[field]);
                         return (
                           <div key={idx} className={isLong?'sm:col-span-2':''}>
