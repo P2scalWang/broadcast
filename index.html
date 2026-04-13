@@ -59,9 +59,8 @@
     };
 
     const WEBHOOK_GET_URLS = {
-      moh: 'https://n8n.srv1038568.hstgr.cloud/webhook/moh',
+      moh: 'https://n8n.srv1038568.hstgr.cloud/webhook/moh', 
       form: 'https://n8n.srv1038568.hstgr.cloud/webhook/a62e235f-0bfa-4637-a206-900c12cd018b' 
-
     };
 
     const CAMPUS_OPTIONS = ['หาดใหญ่', 'ปัตตานี', 'สุราษฎร์', 'ตรัง', 'ภูเก็ต'];
@@ -178,7 +177,8 @@
       'Total_Inner_Suits': 'รวมชุดด้านใน',
       'Booking_Details': 'รายละเอียดสั่งจอง',
       'PDF_URL': 'PDF URL',
-      'RowInSheet': 'เลขบรรทัด (ID)'
+      'RowInSheet': 'เลขบรรทัด (ID)',
+      'Webapp': 'เพิ่มผ่าน Webapp'
     };
 
     const getStaticFieldGroups = (activeTab) => {
@@ -190,7 +190,7 @@
           { id: 'gown-size', title: 'ขนาดชุดครุย', icon: 'shirt', fields: ['Gown_Shoulder_Width_inch', 'Gown_Sleeve_Length_inch', 'Gown_Length_inch', 'Gown_Chest_inch', 'Gown_Head_Circumference_inch'] },
           { id: 'formal-size', title: 'ขนาดชุดด้านใน', icon: 'tie', fields: ['RajPattern_Shoulder_Width_inch', 'RajPattern_Neck_Circumference_inch', 'RajPattern_Front_Shoulder_inch', 'RajPattern_Back_Shoulder_inch', 'RajPattern_Chest_inch', 'RajPattern_Sleeve_Length_inch', 'RajPattern_Shirt_Length_inch', 'RajPattern_Upper_Hip_inch', 'RajPattern_Waist_inch', 'RajPattern_Lower_Hip_inch', 'RajPattern_Belly_Circumference_inch', 'RajPattern_Crotch_inch', 'RajPattern_Thigh_inch', 'RajPattern_Pants_Skirt_Length_inch'] },
           { id: 'payment', title: 'การชำระเงิน', icon: 'credit-card', fields: ['Gown_Price', 'Gown_Deposit', 'Gown_Balance', 'RajPattern_Price', 'RajPattern_Deposit', 'RajPattern_Balance'] },
-          { id: 'system', title: 'ข้อมูลระบบ', icon: 'clock', fields: ['Timestamp', 'Booking_Date', 'RowInSheet'], system: true }
+          { id: 'system', title: 'ข้อมูลระบบ', icon: 'clock', fields: ['Timestamp', 'Booking_Date', 'RowInSheet', 'Webapp'], system: true }
         ];
       }
       return [
@@ -201,7 +201,7 @@
         { id: 'gown-size', title: 'ขนาดชุดครุย', icon: 'ruler', fields: ['Gown_Shoulder_Width_inch', 'Gown_Sleeve_Length_inch', 'Gown_Length_inch', 'Gown_Chest_inch', 'Gown_Head_Circumference_inch'] },
         { id: 'formal-size', title: 'ขนาดชุดด้านใน', icon: 'ruler', fields: ['RajPattern_Shoulder_Width_inch', 'RajPattern_Sleeve_Length_inch', 'RajPattern_Chest_inch', 'RajPattern_Neck_Circumference_inch', 'RajPattern_Shirt_Length_inch', 'RajPattern_Waist_inch', 'RajPattern_Hip_inch', 'General_Shoulder_Width_inch', 'General_Sleeve_Length_inch', 'General_Chest_inch', 'General_Neck_Circumference_inch', 'General_Shirt_Length_inch', 'General_Waist_inch', 'General_Hip_inch', 'Crotch_Length_inch', 'Thigh_Circumference_inch', 'Pants_Length_inch'] },
         { id: 'payment', title: 'การชำระเงิน', icon: 'credit-card', fields: ['Total_Transfer_Amount'] },
-        { id: 'system', title: 'ข้อมูลระบบ', icon: 'clock', fields: ['Timestamp', 'Total_Inner_Suits', 'Booking_Date', 'Booking_Details', 'PDF_URL', 'RowInSheet'], system: true }
+        { id: 'system', title: 'ข้อมูลระบบ', icon: 'clock', fields: ['Timestamp', 'Total_Inner_Suits', 'Booking_Date', 'Booking_Details', 'PDF_URL', 'RowInSheet', 'Webapp'], system: true }
       ];
     };
 
@@ -360,7 +360,16 @@
                 Object.keys(item).forEach(k => cleanItem[k] = item[k] === null || item[k] === undefined ? '' : String(item[k]));
                 cleanItem['Row_Number'] = cleanItem['id'] || cleanItem['RowInSheet'] || String(idx);
                 return cleanItem;
-            }).reverse(); 
+            }).sort((a, b) => {
+                // Sort by id descending (newest first)
+                const idA = parseInt(a['id'] || a['RowInSheet'] || '0', 10);
+                const idB = parseInt(b['id'] || b['RowInSheet'] || '0', 10);
+                if (idA !== idB) return idB - idA;
+                // Fallback: sort by createdAt descending
+                const dateA = new Date(a['createdAt'] || 0).getTime();
+                const dateB = new Date(b['createdAt'] || 0).getTime();
+                return dateB - dateA;
+            }); 
           } catch (e) {
             console.error(e);
             return [];
@@ -492,8 +501,8 @@
 
       return (
         <div className="flex flex-col h-screen bg-slate-50">
-          <header className={`bg-gradient-to-r ${themeClasses.gradient} text-white px-4 py-3 shadow-lg sticky top-0 z-40`}>
-            <div className="flex items-center justify-between max-w-7xl mx-auto">
+          <header className={`bg-gradient-to-r ${themeClasses.gradient} text-white shadow-lg sticky top-0 z-40 transition-colors duration-300`}>
+            <div className="px-4 py-3 flex items-center justify-between max-w-7xl mx-auto">
               <div className="flex items-center gap-3">
                 <button onClick={() => setIsSidebarOpen(true)} className="md:hidden p-2 -ml-2 hover:bg-white/10 rounded-xl">
                   <Icon name="list" className="w-6 h-6"/>
@@ -521,9 +530,19 @@
                 <button onClick={handleRefresh} className="p-2 hover:bg-white/10 rounded-xl hidden sm:flex" title="รีเฟรชข้อมูลล่าสุด">
                   <Icon name="refresh" className="w-5 h-5"/>
                 </button>
-                <button onClick={() => setIsAdding(true)} className="flex items-center gap-2 bg-white text-slate-800 px-4 py-2 rounded-xl font-semibold text-sm hover:bg-slate-50 transition-all shadow-sm">
+                <button onClick={() => setIsAdding(true)} className="flex items-center gap-2 md:gap-2 bg-white text-slate-800 px-3 sm:px-4 py-2 rounded-xl font-semibold text-sm hover:bg-slate-50 transition-all shadow-sm">
                   <Icon name="plus" className="w-4 h-4"/> <span className="hidden sm:inline">เพิ่มรายการ</span>
                 </button>
+              </div>
+            </div>
+            
+            <div className="sm:hidden px-4 pb-3 max-w-7xl mx-auto animate-fade-in">
+              <div className="flex bg-white/15 rounded-xl p-1">
+                {[{id:'moh',label:'🧑 รายคน',count:mohData.length},{id:'form',label:'📋 ฟอร์มกลุ่ม',count:formData.length}].map(tab => (
+                  <button key={tab.id} onClick={() => {setActiveTab(tab.id);setSelectedOrder(null);setSearchQuery('');}} className={`flex-1 py-1.5 rounded-lg text-sm font-semibold transition-all flex justify-center items-center gap-1.5 ${activeTab===tab.id?'bg-white text-slate-800 shadow':'text-white/85 hover:text-white hover:bg-white/10'}`}>
+                    {tab.label} <Badge variant={activeTab===tab.id?'default':'new'} className="!py-0 !px-1.5">{tab.count}</Badge>
+                  </button>
+                ))}
               </div>
             </div>
           </header>
@@ -731,7 +750,18 @@
               dataToSave['ประทับเวลา'] = getCurrentTimestamp();
               dataToSave['Timestamp'] = getCurrentTimestamp();
               dataToSave['TimeStamp'] = getCurrentTimestamp();
+              dataToSave['Booking_Date'] = getCurrentTimestamp();
+              dataToSave['วันที่สั่งจอง'] = getCurrentTimestamp();
+              dataToSave['Webapp'] = 'Yes';
           }
+          
+          groups.forEach(g => {
+            g.fields.forEach(f => {
+              if (dataToSave[f] === undefined) {
+                dataToSave[f] = '';
+              }
+            });
+          });
           
           await onSave({ action: isEditing ? 'edit' : 'add', dataWithTimestamp: dataToSave, tab: activeTab, Row_Number: initialData?.Row_Number });
         } catch (e) { console.error(e); } finally { setSubmitting(false); }
@@ -741,15 +771,20 @@
       const progress = mode === 'manual' ? (step / Math.max(groups.length, 1)) * 100 : (mode === 'upload' ? 100 : 0);
 
       const getSelectedCampus = () => {
-        return formData['Campus'] || formData['Institution'] || formData['วิทยาเขต'] || formData['สถาบัน'] || '';
+        return formData['Campus'] || formData['วิทยาเขต'] || '';
       };
 
       const isMaleOrdering = () => {
-        return formData['Male_Inner_Suit_Choice'] === 'สั่งจอง' || formData['สำหรับบัณฑิตชาย เท่านั้น'] === 'สั่งจอง';
+        const fieldName = currentGroup?.fields.find(f => cleanLabel(f).includes('สำหรับบัณฑิตชาย เท่านั้น'));
+        if (fieldName && formData[fieldName] === 'สั่งจอง') return true;
+        return false;
       };
 
       const getInnerSuitSelection = () => {
-        return formData['Order_Inner_Suit_Male'] || formData['สั่งจองชุดด้านใน'] || null;
+        for (const key of Object.keys(formData)) {
+          if (cleanLabel(key).includes('สั่งจองชุดด้านใน')) return formData[key];
+        }
+        return null;
       };
 
       return (
@@ -779,7 +814,7 @@
                       <h5 className="font-bold text-slate-800 text-lg mb-1 group-hover:text-blue-600">อัปโหลดไฟล์</h5>
                       <p className="text-sm text-slate-500 leading-relaxed">แนบไฟล์ PDF, รูปภาพ หรือเอกสาร (แนบหลายไฟล์ได้)</p>
                     </button>
-                    <button onClick={() => { setMode('manual'); setFormData(prev => ({ ...prev, 'ประทับเวลา': getCurrentTimestamp(), 'Timestamp': getCurrentTimestamp() })); }} className="hover-lift group p-6 rounded-2xl border-2 border-slate-200 hover:border-emerald-400 bg-white text-left transition-all">
+                    <button onClick={() => { setMode('manual'); const ts = getCurrentTimestamp(); setFormData(prev => ({ ...prev, 'ประทับเวลา': ts, 'Timestamp': ts, 'TimeStamp': ts, 'Booking_Date': ts, 'วันที่สั่งจอง': ts })); }} className="hover-lift group p-6 rounded-2xl border-2 border-slate-200 hover:border-emerald-400 bg-white text-left transition-all">
                       <div className="w-14 h-14 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center mb-4 group-hover:bg-emerald-600 group-hover:text-white transition-all group-hover:scale-110"><Icon name="edit" className="w-7 h-7"/></div>
                       <h5 className="font-bold text-slate-800 text-lg mb-1 group-hover:text-emerald-600">กรอกข้อมูลเอง</h5>
                       <p className="text-sm text-slate-500 leading-relaxed">พิมพ์กรอกรายละเอียดลงในฟอร์มทีละขั้นตอน</p>
@@ -843,9 +878,10 @@
                       const cLabel = cleanLabel(field);
                       
                       const isLong = ['Address', 'Booking_Details'].includes(field) || cLabel.length > 40;
-                      const isReadOnly = ['Timestamp', 'RowInSheet', 'Booking_Order_Number', 'Suit_Number'].includes(field);
                       
-                      const isCampusField = ['Campus', 'Institution'].includes(field);
+                      const isReadOnly = ['Timestamp', 'RowInSheet', 'id', 'Row_Number', 'ประทับเวลา', 'Booking_Date', 'วันที่สั่งจอง', 'Total_Inner_Suits', 'รวมชุดด้านใน'].includes(field);
+                      
+                      const isCampusField = activeTab === 'form' && field === 'Campus';
                       const isDegreeField = ['Degree_Level', 'Order_Degree_Gown'].includes(field);
                       
                       const isMaleOnlyOrderField = field === 'Male_Inner_Suit_Choice';
@@ -858,13 +894,12 @@
                       const isRajpatternSizeField = field.startsWith('RajPattern_') && !['RajPattern_Suit_Service_Type', 'RajPattern_Price', 'RajPattern_Deposit', 'RajPattern_Balance', 'RajPattern_Shirt_With_Insignia'].includes(field);
                       const isOtherSuitSizeField = field.startsWith('General_') || ['Crotch_Length_inch', 'Thigh_Circumference_inch', 'Pants_Length_inch'].includes(field);
                       
-                      const isFacultyRelated = ['Faculty', 'Major', 'Faculty_Color', 'HatYai_Faculty_Color', 'Pattani_Faculty_Color', 'SuratThani_Faculty_Color', 'Trang_Faculty_Color', 'Phuket_Faculty_Color'].includes(field);
+                      const isFacultyRelated = activeTab === 'form' && ['HatYai_Faculty_Color', 'Pattani_Faculty_Color', 'SuratThani_Faculty_Color', 'Trang_Faculty_Color', 'Phuket_Faculty_Color'].includes(field);
                       const isOrderTypeField = field === 'Order_Type';
                       
                       const isYesNoField = ['Order_Garment_Bag', 'Order_RajPattern_Suit', 'Order_Navy_Blue_Suit', 'Order_White_Suit', 'Order_Insignia', 'Order_Student_Uniform'].includes(field);
                       const isSuitServiceType = ['RajPattern_Suit_Service_Type', 'Gown_Service_Type'].includes(field);
 
-                      // -- ลอจิกการซ่อนฟิลด์ Form แบบแข็งแรง --
                       if (activeTab === 'form') {
                           if (isInnerSuitOrderField && !isMaleOrdering()) return null;
 
@@ -893,7 +928,6 @@
                           }
                       }
 
-                      // เริ่ม Render
                       if (isReadOnly) {
                         return (
                           <div key={idx} className={isLong?'sm:col-span-2':''}>
@@ -985,10 +1019,7 @@
                               ))}
                             </div>
 
-                            <div className="text-[11.5px] text-amber-700 bg-amber-100/50 p-3.5 rounded-xl border border-amber-200/60 leading-relaxed">
-                              <span className="font-bold">⚠️ คำแนะนำ:</span> คณะแพทย์, คณะเภสัช, และคณะทันตแพทย์ ใส่ครุยปริญญาโท เลือก <span className="font-bold underline">"โท"</span> นะคะ<br/>
-                              ยกเว้น <span className="font-bold text-amber-800">*คณะแพทย์ สาขารังสี และกายภาพบำบัด</span> ใส่ครุยปริญญาตรี เลือก <span className="font-bold underline">"ตรี"</span> ค่ะ
-                            </div>
+
 
                             {activeTab === 'form' && formData[field] && PACKAGE_OPTIONS[formData[field]] && (() => {
                                const packageField = formData[field] === 'ตรี' ? 'Bachelor_Degree_Details' : formData[field] === 'โท' ? 'Master_Degree_Details' : 'Doctoral_Degree_Details';
@@ -1025,6 +1056,8 @@
                                         ['RajPattern_Shirt_With_Insignia', 'Acting_Sub_Lieutenant_Suit', 'Civil_Servant_Suit'].forEach(k => updates[k] = '');
                                         ['RajPattern_Shoulder_Width_inch', 'RajPattern_Neck_Circumference_inch', 'RajPattern_Front_Shoulder_inch', 'RajPattern_Back_Shoulder_inch', 'RajPattern_Chest_inch', 'RajPattern_Sleeve_Length_inch', 'RajPattern_Shirt_Length_inch', 'RajPattern_Upper_Hip_inch', 'RajPattern_Waist_inch', 'RajPattern_Lower_Hip_inch', 'RajPattern_Belly_Circumference_inch', 'RajPattern_Crotch_inch', 'RajPattern_Thigh_inch', 'RajPattern_Pants_Skirt_Length_inch'].forEach(k => updates[k] = '');
                                         ['General_Shoulder_Width_inch', 'General_Sleeve_Length_inch', 'General_Chest_inch', 'General_Neck_Circumference_inch', 'General_Shirt_Length_inch', 'General_Waist_inch', 'General_Hip_inch', 'Crotch_Length_inch', 'Thigh_Circumference_inch', 'Pants_Length_inch'].forEach(k => updates[k] = '');
+                                        updates['Total_Inner_Suits'] = '';
+                                        updates['รวมชุดด้านใน'] = '';
                                     }
                                     setFormData({...formData, ...updates});
                                   }} className="hidden"/>
@@ -1058,6 +1091,9 @@
                                     if (val !== 'สั่งจองชุดว่าที่ร้อยตรี' && val !== 'สั่งจองชุดข้าราชการ') {
                                         ['General_Shoulder_Width_inch', 'General_Sleeve_Length_inch', 'General_Chest_inch', 'General_Neck_Circumference_inch', 'General_Shirt_Length_inch', 'General_Waist_inch', 'General_Hip_inch', 'Crotch_Length_inch', 'Thigh_Circumference_inch', 'Pants_Length_inch'].forEach(k => updates[k] = '');
                                     }
+                                    
+                                    updates['Total_Inner_Suits'] = '';
+                                    updates['รวมชุดด้านใน'] = '';
 
                                     setFormData({...formData, ...updates});
                                   }} className="hidden"/>
@@ -1083,7 +1119,15 @@
                              <label className="block text-sm font-bold text-slate-700 mb-2">{cLabel}</label>
                              <select 
                                value={formData[field] || ''} 
-                               onChange={(e) => setFormData({...formData, [field]: e.target.value})}
+                               onChange={(e) => {
+                                   const val = e.target.value;
+                                   setFormData({
+                                       ...formData, 
+                                       [field]: val,
+                                       'Total_Inner_Suits': val,
+                                       'รวมชุดด้านใน': val
+                                   });
+                               }}
                                className="w-full px-4 py-3.5 bg-white border border-slate-300 shadow-sm rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none transition-all text-sm appearance-none font-medium text-slate-700"
                              >
                                <option value="" className="text-slate-400">-- กรุณาเลือก --</option>
@@ -1119,7 +1163,6 @@
                       }
 
                       if (isYesNoField) {
-                        // ปรับให้รองรับข้อมูลทั้งที่ตอบ "มี/ไม่มี" จาก Sheet เก่าด้วย เผื่อกรณีใช้ข้อมูลเดิม
                         const currentValue = ['มี', 'รับ'].includes(formData[field]) ? 'รับ' : (['ไม่มี', 'ไม่รับ'].includes(formData[field]) ? 'ไม่รับ' : formData[field]);
                         return (
                           <div key={idx} className={isLong?'sm:col-span-2':''}>
